@@ -1,7 +1,3 @@
-Here it is — final version with data added:
-
----
-
 # ⬡ Proofed Protocol
 
 > The verification layer for the Web3 talent economy.

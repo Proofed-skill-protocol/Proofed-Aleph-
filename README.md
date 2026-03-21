@@ -1,3 +1,7 @@
+Here it is — final version with data added:
+
+---
+
 # ⬡ Proofed Protocol
 
 > The verification layer for the Web3 talent economy.
@@ -56,6 +60,22 @@ When a user completes a task, the result is evaluated by AI, validated by decent
 
 **4. Gamification centered on real learning**
 Reward pools incentivize genuine effort — not just finishing. Rewards are distributed proportionally by score. The better you actually build, the more you earn. Organizations can fund bounties for specific skills they need.
+
+---
+
+## How we compare
+
+| | Proofed Protocol | Coursera / Udemy | HackerRank / Coderbyte | ChatGPT / AI tools | LearnWeb3 / Alchemy U | Layer3 / RabbitHole |
+|---|---|---|---|---|---|---|
+| Personalized learning path | ✅ | ❌ | ❌ | ⚠️ No structure | ⚠️ Fixed curriculum | ❌ |
+| Evaluates real work | ✅ | ❌ | ⚠️ Coding tests only | ⚠️ No verification | ❌ | ❌ |
+| Decentralized AI consensus | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| On-chain tamper-proof proof | ✅ | ❌ | ❌ | ❌ | ❌ | ⚠️ Activity only |
+| Verifiable by anyone | ✅ | ❌ | ❌ | ❌ | ❌ | ⚠️ Partial |
+| Real economic rewards by score | ✅ | ❌ | ❌ | ❌ | ❌ | ⚠️ Quizzes only |
+| Web3 native | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ |
+| Credential can be faked | ❌ Never | ✅ Easily | ✅ Easily | ✅ Screenshot | ✅ Easily | ⚠️ Partially |
+
 ---
 
 ## How it works

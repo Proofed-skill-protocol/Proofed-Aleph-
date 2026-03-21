@@ -1,29 +1,3 @@
-You're right to be confused, let me clarify this once and for all.
-
----
-
-**There are two READMEs I made:**
-
-**README #1** — The technical one (inside the zip file)
-- Written for the **team** (Mauro, Roheemah, Harshita)
-- Has "simulated vs real", next steps, names, internal notes
-- Lives inside `src/` folder
-- Judges should NOT see this as the main README
-
-**README #2** — The public one (I sent as text to copy paste)
-- Written for **judges and the public**
-- Has problem, solution, how it works, business model, track alignment
-- This is what should be the main `README.md` at the root of the repo
-- **This is the one based on your original document** ✅
-
----
-
-**What to do right now — one action:**
-
-Go to the repo → click `README.md` → pencil icon → delete everything → paste this:
-
----
-
 # ⬡ Proofed Protocol
 
 > Turn real work into tamper-proof, verifiable proof of skill — evaluated by AI, validated by consensus, stored on-chain.

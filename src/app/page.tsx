@@ -1,143 +1,135 @@
 'use client';
-// src/app/page.tsx — Clean orchestrator, all UI split into components
 
-import { useState, useEffect } from 'react';
-import { buildLeaderboard, RewardEntry } from '@/lib/rewardSplit';
-import { GoalKey } from '@/lib/tasks';
-import type { EvaluationResult } from './api/evaluate/route';
+import { useState, useCallback } from 'react';
+import { useAppState } from '@/lib/useAppState';
+import { TrackKey } from '@/lib/data';
 
-import Topbar from '@/components/Topbar';
-import ProgressBar from '@/components/ProgressBar';
-import GoalScreen from '@/components/GoalScreen';
-import TaskScreen from '@/components/TaskScreen';
-import SubmitScreen from '@/components/SubmitScreen';
-import EvaluatingScreen from '@/components/EvaluatingScreen';
-import ResultsScreen from '@/components/ResultsScreen';
+import { checkRepo } from '@/lib/api';
 
-type Screen = 'goal' | 'task' | 'submit' | 'evaluating' | 'results';
-const SCREEN_IDX: Record<Screen, number> = {
-  goal: 0, task: 1, submit: 2, evaluating: 3, results: 5,
-};
+import Topbar from './components/Topbar';
+import StepBar from './components/StepBar';
+import Toast from './components/Toast';
+import Screen1Category from './components/Screen1Category';
+import Screen2Track from './components/Screen2Track';
+import Screen3Path from './components/Screen3Path';
+import Screen4Submit from './components/Screen4Submit';
+import Screen5Eval from './components/Screen5Eval';
+import Screen6Results from './components/Screen6Results';
 
 export default function Home() {
-  const [screen, setScreen] = useState<Screen>('goal');
-  const [goal, setGoal] = useState<GoalKey | null>(null);
-  const [githubUrl, setGithubUrl] = useState('');
-  const [wallet, setWallet] = useState('');
-  const [pipeStep, setPipeStep] = useState(-1);
-  const [result, setResult] = useState<EvaluationResult | null>(null);
-  const [leaderboard, setLeaderboard] = useState<RewardEntry[]>([]);
-  const [scoreDisplay, setScoreDisplay] = useState(0);
-  const [urlError, setUrlError] = useState('');
-  const [walletError, setWalletError] = useState('');
-  const [apiError, setApiError] = useState('');
+  const {
+    state,
+    goTo,
+    pickCat,
+    pickTrack,
+    markStepDone,
+    selectPool,
+    setGithubUrl,
+    setWalletAddress,
+    restart,
+    isFormValid,
+    allStepsDone,
+  } = useAppState();
 
-  const formValid =
-    githubUrl.startsWith('https://github.com/') &&
-    wallet.startsWith('0x') &&
-    wallet.length >= 10;
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  // ✅ ADD THESE TWO
+  const [evalResult, setEvalResult] = useState<any>(null);
+  const [evalLoading, setEvalLoading] = useState(false);
 
-  useEffect(() => {
-    if (!result) return;
-    let c = 0;
-    const iv = setInterval(() => {
-      c = Math.min(c + 2, result.score);
-      setScoreDisplay(c);
-      if (c >= result.score) clearInterval(iv);
-    }, 18);
-    return () => clearInterval(iv);
-  }, [result]);
+  const showToast = useCallback((msg: string) => setToastMsg(msg), []);
+  const clearToast = useCallback(() => setToastMsg(null), []);
 
-  function handleUrlChange(val: string) {
-    setGithubUrl(val);
-    if (!val) return setUrlError('');
-    if (!val.startsWith('https://github.com/')) {
-      setUrlError('Must be a valid GitHub URL — https://github.com/username/repo');
-    } else {
-      setUrlError('');
-    }
-  }
 
-  function handleWalletChange(val: string) {
-    setWallet(val);
-    if (!val) return setWalletError('');
-    if (!val.startsWith('0x') || val.length < 10) {
-      setWalletError('Must be a valid Ethereum wallet address starting with 0x');
-    } else {
-      setWalletError('');
-    }
-  }
-
-  async function runEvaluation() {
-    setScreen('evaluating');
-    setApiError('');
-    setPipeStep(0);
-
-    const delays = [900, 1400, 1800, 1100, 900];
-    let t = 0;
-    delays.forEach((d, i) => {
-      t += d;
-      setTimeout(() => setPipeStep(i + 1), t);
-    });
-
+  const handleEval = useCallback(async () => {
+    if (!state.githubUrl) return;
+    setEvalLoading(true);
     try {
-      const res = await fetch('/api/evaluate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ githubUrl, goal }),
-      });
-      if (!res.ok) throw new Error(`Server error: ${res.status}`);
-      const data: EvaluationResult = await res.json();
-      if (!data?.score) throw new Error('Invalid response');
-
-      const totalDelay = delays.reduce((a, b) => a + b, 0) + 600;
-      setTimeout(() => {
-        setResult(data);
-        setLeaderboard(buildLeaderboard(wallet, data.score));
-        setScoreDisplay(0);
-        setScreen('results');
-      }, totalDelay);
-    } catch {
-      setApiError('Evaluation failed. Please check your GitHub URL and try again.');
-      setScreen('submit');
+      const result = await checkRepo(state.githubUrl);
+      setEvalResult(result);
+      goTo(6);
+      showToast('✓ Proof-of-Skill minted on Avalanche Fuji');
+    } catch (err: any) {
+      showToast('❌ Evaluation failed: ' + err.message);
+    } finally {
+      setEvalLoading(false);
     }
-  }
-
-  function restart() {
-    setGoal(null); setGithubUrl(''); setWallet('');
-    setResult(null); setLeaderboard([]); setScoreDisplay(0);
-    setPipeStep(-1); setApiError(''); setUrlError(''); setWalletError('');
-    setScreen('goal');
-  }
+  }, [state.githubUrl, goTo, showToast]);
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
-      <Topbar />
-      <ProgressBar current={SCREEN_IDX[screen]} />
-      <main style={{ maxWidth: 760, margin: '0 auto', padding: '36px 32px 80px' }}>
-        {screen === 'goal' && (
-          <GoalScreen goal={goal} onSelect={setGoal} onNext={() => setScreen('task')} />
-        )}
-        {screen === 'task' && goal && (
-          <TaskScreen goal={goal} onBack={() => setScreen('goal')} onNext={() => setScreen('submit')} />
-        )}
-        {screen === 'submit' && (
-          <SubmitScreen
-            githubUrl={githubUrl} wallet={wallet}
-            urlError={urlError} walletError={walletError} apiError={apiError}
-            formValid={formValid}
-            onUrlChange={handleUrlChange} onWalletChange={handleWalletChange}
-            onBack={() => setScreen('task')} onSubmit={runEvaluation}
+    <>
+      <div className="shell">
+        <Topbar />
+        <StepBar current={state.step} />
+
+        {state.step === 1 && (
+          <Screen1Category
+            selCat={state.selCat}
+            onPickCat={pickCat}
+            onNext={() => goTo(2)}
           />
         )}
-        {screen === 'evaluating' && <EvaluatingScreen pipeStep={pipeStep} />}
-        {screen === 'results' && result && goal && (
-          <ResultsScreen
-            result={result} leaderboard={leaderboard}
-            scoreDisplay={scoreDisplay} goal={goal} onRestart={restart}
+
+        {state.step === 2 && (
+          <Screen2Track
+            selTrack={state.selTrack}
+            onPickTrack={(track: TrackKey, total: number) => pickTrack(track, total)}
+            onNext={() => goTo(3)}
+            onBack={() => goTo(1)}
           />
         )}
-      </main>
-    </div>
+
+        {state.step === 3 && state.selTrack && (
+          <Screen3Path
+            selTrack={state.selTrack}
+            doneSteps={state.doneSteps}
+            allStepsDone={allStepsDone}
+            onMarkDone={markStepDone}
+            onNext={() => goTo(4)}
+            onBack={() => goTo(2)}
+          />
+        )}
+
+        {state.step === 4 && (
+          <Screen4Submit
+            poolEntry={state.poolEntry}
+            githubUrl={state.githubUrl}
+            walletAddress={state.walletAddress}
+            isFormValid={isFormValid}
+            onSelectPool={selectPool}
+            onGithubChange={setGithubUrl}
+            onWalletChange={setWalletAddress}
+            onSubmit={() => goTo(5)}
+            onBack={() => goTo(3)}
+          />
+        )}
+
+        {/* ✅ UPDATED — pass loading state and real handler */}
+        {state.step === 5 && state.selTrack && (
+         <Screen5Eval
+          selTrack={state.selTrack}
+          githubUrl={state.githubUrl}
+          onDone={(result) => {        // ✅ receive result
+          setEvalResult(result);     // ✅ store it
+          goTo(6);
+      showToast('✓ Proof-of-Skill minted on Avalanche Fuji');
+    }}
+  />
+)}
+
+        {/* ✅ UPDATED — pass evalResult to Screen6 */}
+        {state.step === 6 && state.selTrack && (
+          <Screen6Results
+            selTrack={state.selTrack}
+            walletAddress={state.walletAddress}
+            poolEntry={state.poolEntry}
+            evalResult={evalResult}
+            onRestart={restart}
+            onToast={showToast}
+          />
+        )}
+      </div>
+
+      <Toast message={toastMsg} onDone={clearToast} />
+    </>
   );
 }

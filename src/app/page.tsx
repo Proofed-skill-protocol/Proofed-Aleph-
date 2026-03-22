@@ -4,6 +4,8 @@ import { useState, useCallback } from 'react';
 import { useAppState } from '@/lib/useAppState';
 import { TrackKey } from '@/lib/data';
 
+import { checkRepo } from '@/lib/api';
+
 import Topbar from './components/Topbar';
 import StepBar from './components/StepBar';
 import Toast from './components/Toast';
@@ -30,8 +32,28 @@ export default function Home() {
   } = useAppState();
 
   const [toastMsg, setToastMsg] = useState<string | null>(null);
+  // ✅ ADD THESE TWO
+  const [evalResult, setEvalResult] = useState<any>(null);
+  const [evalLoading, setEvalLoading] = useState(false);
+
   const showToast = useCallback((msg: string) => setToastMsg(msg), []);
   const clearToast = useCallback(() => setToastMsg(null), []);
+
+
+  const handleEval = useCallback(async () => {
+    if (!state.githubUrl) return;
+    setEvalLoading(true);
+    try {
+      const result = await checkRepo(state.githubUrl);
+      setEvalResult(result);
+      goTo(6);
+      showToast('✓ Proof-of-Skill minted on Avalanche Fuji');
+    } catch (err: any) {
+      showToast('❌ Evaluation failed: ' + err.message);
+    } finally {
+      setEvalLoading(false);
+    }
+  }, [state.githubUrl, goTo, showToast]);
 
   return (
     <>
@@ -81,21 +103,26 @@ export default function Home() {
           />
         )}
 
+        {/* ✅ UPDATED — pass loading state and real handler */}
         {state.step === 5 && state.selTrack && (
-          <Screen5Eval
-            selTrack={state.selTrack}
-            onDone={() => {
-              goTo(6);
-              showToast('✓ Proof-of-Skill minted on Avalanche Fuji');
-            }}
-          />
-        )}
+         <Screen5Eval
+          selTrack={state.selTrack}
+          githubUrl={state.githubUrl}
+          onDone={(result) => {        // ✅ receive result
+          setEvalResult(result);     // ✅ store it
+          goTo(6);
+      showToast('✓ Proof-of-Skill minted on Avalanche Fuji');
+    }}
+  />
+)}
 
+        {/* ✅ UPDATED — pass evalResult to Screen6 */}
         {state.step === 6 && state.selTrack && (
           <Screen6Results
             selTrack={state.selTrack}
             walletAddress={state.walletAddress}
             poolEntry={state.poolEntry}
+            evalResult={evalResult}
             onRestart={restart}
             onToast={showToast}
           />

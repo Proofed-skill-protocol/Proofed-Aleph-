@@ -8,6 +8,7 @@ interface Screen6Props {
   selTrack: TrackKey;
   walletAddress: string;
   poolEntry: number | null;
+  evalResult: any | null;   
   onRestart: () => void;
   onToast: (msg: string) => void;
 }
@@ -16,11 +17,21 @@ export default function Screen6({
   selTrack,
   walletAddress,
   poolEntry,
+  evalResult,               
   onRestart,
   onToast,
 }: Screen6Props) {
   const ev = PATHS[selTrack].eval;
-  const { score } = ev;
+
+  // ✅ Use real API score if available, fallback to hardcoded
+  const score = evalResult?.score ?? ev.score;
+
+  // ✅ Use real feedback if available, fallback to hardcoded
+  const strengths    = evalResult?.strengths    ?? ev.strengths;
+  const improvements = evalResult?.improvements ?? ev.improvements;
+  const summary      = evalResult?.summary      ?? ev.summary;
+  const breakdown    = evalResult?.breakdown    ?? ev.breakdown;
+
   const grade = getGrade(score);
 
   const [displayScore, setDisplayScore] = useState(0);
@@ -57,7 +68,7 @@ export default function Screen6({
 
   // Animate breakdown bars
   useEffect(() => {
-    const t = setTimeout(() => setBarWidths(ev.breakdown), 300);
+    const t = setTimeout(() => setBarWidths(breakdown), 300);
     return () => clearTimeout(t);
   }, [ev.breakdown]);
 
@@ -96,7 +107,7 @@ export default function Screen6({
         </div>
         <div className="score-meta">
           <div className="score-grade" style={{ color: grade.color }}>{grade.label}</div>
-          <p className="score-text">{ev.summary}</p>
+          <p className="score-text">{summary}</p>
         </div>
       </div>
 
@@ -156,7 +167,7 @@ export default function Screen6({
         <div className="fb-box">
           <div className="fb-head pos">✓ Strengths</div>
           <div className="fb-items">
-            {ev.strengths.map((s, i) => (
+            {strengths.map((s, i) => (
               <div key={i} className="fb-item">
                 <span className="fb-b pos">+</span><span>{s}</span>
               </div>
@@ -166,7 +177,7 @@ export default function Screen6({
         <div className="fb-box">
           <div className="fb-head neg">↑ Improvements</div>
           <div className="fb-items">
-            {ev.improvements.map((s, i) => (
+            {improvements.map((s, i) => (
               <div key={i} className="fb-item">
                 <span className="fb-b neg">→</span><span>{s}</span>
               </div>

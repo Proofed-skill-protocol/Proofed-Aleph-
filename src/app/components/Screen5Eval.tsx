@@ -3,11 +3,13 @@
 import { useEffect, useState } from 'react';
 import { PATHS, TrackKey } from '@/lib/data';
 import { sleep } from '@/lib/utils';
+import { getInstruction, checkRepo } from '@/lib/api';       
 import GenLayerAnim, { GenLayerAnimState } from './GenLayerAnim';
 
 interface Screen5Props {
   selTrack: TrackKey;
-  onDone: () => void;
+  githubUrl: string;        
+  onDone: (result: any) => void;
 }
 
 const defaultValidators: GenLayerAnimState['validators'] = [
@@ -16,12 +18,13 @@ const defaultValidators: GenLayerAnimState['validators'] = [
   { status: 'STANDBY', score: null, state: '' },
 ];
 
-export default function Screen5({ selTrack, onDone }: Screen5Props) {
+export default function Screen5({ selTrack, githubUrl, onDone }: Screen5Props) {
   const [p0, setP0] = useState<'' | 'active' | 'done'>('');
   const [p1, setP1] = useState<'' | 'active' | 'done'>('');
   const [showGl, setShowGl] = useState(false);
   const [showSpin, setShowSpin] = useState(true);
   const [pipeStates, setPipeStates] = useState<{ p2: '' | 'active' | 'done'; p3: '' | 'active' | 'done' }>({ p2: '', p3: '' });
+  const [apiError, setApiError] = useState<string | null>(null);   // ✅ ADD THIS
 
   const [glAnim, setGlAnim] = useState<GenLayerAnimState>({
     pillStep: 0,
@@ -48,6 +51,19 @@ export default function Screen5({ selTrack, onDone }: Screen5Props) {
     const run = async () => {
       // Phase 1
       setP0('active');
+
+       const trackTheme = PATHS[selTrack].label; // use track name as theme
+      
+      const apiPromise = getInstruction(trackTheme)   // ← get rubric
+        .then(instruction => checkRepo(githubUrl, instruction))  // ← evaluate repo
+        .catch((err: Error) => {
+          setApiError(err.message);
+          return null;
+        });
+
+      // ✅ ADD THIS — storage variable
+      let finalResult: any = null;
+
       await sleep(1000);
       setP0('done');
 
@@ -67,13 +83,17 @@ export default function Screen5({ selTrack, onDone }: Screen5Props) {
       setV(1, 'EVALUATING', null, 'thinking');
       await sleep(400);
       setV(2, 'EVALUATING', null, 'thinking');
-      await sleep(1400);
 
-      const base = PATHS[selTrack].eval.score;
+      // ✅ ADD THIS — await the result here (API has been running in background)
+      const apiResult = await apiPromise;
+      finalResult = apiResult;
+
+      const base = finalResult?.score ?? PATHS[selTrack].eval.score;  // ✅ real score or fallback
       const scores = [0, 1, 2].map(() =>
         Math.max(50, Math.min(99, base + Math.floor(Math.random() * 7) - 3))
       );
 
+      await sleep(500);
       setV(0, 'CONFIRMED', scores[0], 'agreed');
       await sleep(500);
       setV(1, 'CONFIRMED', scores[1], 'agreed');
@@ -97,7 +117,7 @@ export default function Screen5({ selTrack, onDone }: Screen5Props) {
 
       setShowSpin(false);
       await sleep(200);
-      onDone();
+      onDone(finalResult);   
     };
 
     run();
@@ -112,6 +132,13 @@ export default function Screen5({ selTrack, onDone }: Screen5Props) {
           Evaluating your <em style={{ color: 'var(--green)' }}>submission</em>
         </p>
         <p className="eval-sub">Takes 15–30 seconds. Do not close this tab.</p>
+
+        {/* ✅ Show API error as a soft warning (doesn't block flow) */}
+        {apiError && (
+          <p style={{ color: 'orange', fontSize: '0.8rem', marginTop: 4 }}>
+            ⚠ Live evaluation unavailable — using estimated score
+          </p>
+        )}
 
         <div className="pipeline">
           <div className={`pipe ${p0}`}><div className="pdot" />Fetching repository from GitHub...</div>

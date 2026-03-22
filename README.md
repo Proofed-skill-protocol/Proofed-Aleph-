@@ -149,6 +149,8 @@ This creates real economic incentive to do genuine work — not just finish a co
 | Frontend | Next.js 14 · Tailwind CSS | Full product flow, leaderboard, public verification page |
 | Reward Logic | TypeScript | Proportional score-based pool distribution |
 
+API Repository: https://github.com/mauroradino/Proofed_API · Live: https://proofed-api.vercel.app
+
 ---
 
 ## Hackathon Track Alignment

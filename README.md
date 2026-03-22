@@ -224,5 +224,5 @@ Without an API key the app runs in simulated mode with realistic pre-set results
 *"Proofed Protocol is the first skill verification layer for Web3 — where anyone trying to break into blockchain can prove they can actually build, not just that they watched a course."*
 
 ---
-
+General track: https://devspot.app/projects/1510
 Built at Aleph Hackathon 2026 · GenLayer · Avalanche

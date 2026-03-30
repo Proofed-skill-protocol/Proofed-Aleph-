@@ -1,4 +1,4 @@
-const BASE_URL = "https://proofed-api.vercel.app";
+const BASE_URL = " ";
 
 export async function getInstruction(theme: string): Promise<string> {
   const url = `${BASE_URL}/get_instruction?theme=${encodeURIComponent(theme)}`;
@@ -12,15 +12,10 @@ export async function getInstruction(theme: string): Promise<string> {
 }
 
 export async function checkRepo(repoUrl: string, instruction: string): Promise<any> {
-  // ✅ Both `url` and `instruction` are required
-  const params = new URLSearchParams({
-    url: repoUrl,
-    instruction: instruction
-  });
-
-  const response = await fetch(`${BASE_URL}/check_repo?${params}`, {
+  const response = await fetch(`/api/evaluate`, {
     method: "POST",
-    headers: { "accept": "application/json" }
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ githubUrl: repoUrl, goal: instruction }),
   });
   if (!response.ok) throw new Error(`Failed: ${response.status}`);
   return await response.json();

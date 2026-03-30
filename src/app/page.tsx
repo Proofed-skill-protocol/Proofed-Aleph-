@@ -3,18 +3,17 @@
 import { useState, useCallback } from 'react';
 import { useAppState } from '@/lib/useAppState';
 import { TrackKey } from '@/lib/data';
+import type { Challenge } from '@/lib/genlayer/client';
 
-import { checkRepo } from '@/lib/api';
-
-import Topbar from './components/Topbar';
-import StepBar from './components/StepBar';
-import Toast from './components/Toast';
+import Topbar          from './components/Topbar';
+import StepBar         from './components/StepBar';
+import Toast           from './components/Toast';
 import Screen1Category from './components/Screen1Category';
-import Screen2Track from './components/Screen2Track';
-import Screen3Path from './components/Screen3Path';
-import Screen4Submit from './components/Screen4Submit';
-import Screen5Eval from './components/Screen5Eval';
-import Screen6Results from './components/Screen6Results';
+import Screen2Track    from './components/Screen2Track';
+import Screen3Path     from './components/Screen3Path';
+import Screen4Submit   from './components/Screen4Submit';
+import Screen5Eval     from './components/Screen5Eval';
+import Screen6Results  from './components/Screen6Results';
 
 export default function Home() {
   const {
@@ -31,29 +30,19 @@ export default function Home() {
     allStepsDone,
   } = useAppState();
 
-  const [toastMsg, setToastMsg] = useState<string | null>(null);
-  // ✅ ADD THESE TWO
-  const [evalResult, setEvalResult] = useState<any>(null);
-  const [evalLoading, setEvalLoading] = useState(false);
+  const [toastMsg,        setToastMsg]        = useState<string | null>(null);
+  const [evalResult,      setEvalResult]      = useState<any>(null);
+  // Track the selected on-chain challenge
+  const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
 
-  const showToast = useCallback((msg: string) => setToastMsg(msg), []);
+  const showToast  = useCallback((msg: string) => setToastMsg(msg), []);
   const clearToast = useCallback(() => setToastMsg(null), []);
 
-
-  const handleEval = useCallback(async () => {
-    if (!state.githubUrl) return;
-    setEvalLoading(true);
-    try {
-      const result = await checkRepo(state.githubUrl);
-      setEvalResult(result);
-      goTo(6);
-      showToast('✓ Proof-of-Skill minted on Avalanche Fuji');
-    } catch (err: any) {
-      showToast('❌ Evaluation failed: ' + err.message);
-    } finally {
-      setEvalLoading(false);
-    }
-  }, [state.githubUrl, goTo, showToast]);
+  const handleRestart = useCallback(() => {
+    setEvalResult(null);
+    setSelectedChallenge(null);
+    restart();
+  }, [restart]);
 
   return (
     <>
@@ -65,6 +54,7 @@ export default function Home() {
           <Screen1Category
             selCat={state.selCat}
             onPickCat={pickCat}
+            onPickChallenge={(c) => setSelectedChallenge(c)}
             onNext={() => goTo(2)}
           />
         )}
@@ -103,27 +93,27 @@ export default function Home() {
           />
         )}
 
-        {/* ✅ UPDATED — pass loading state and real handler */}
         {state.step === 5 && state.selTrack && (
-         <Screen5Eval
-          selTrack={state.selTrack}
-          githubUrl={state.githubUrl}
-          onDone={(result) => {        // ✅ receive result
-          setEvalResult(result);     // ✅ store it
-          goTo(6);
-      showToast('✓ Proof-of-Skill minted on Avalanche Fuji');
-    }}
-  />
-)}
+          <Screen5Eval
+            selTrack={state.selTrack}
+            githubUrl={state.githubUrl}
+            walletAddress={state.walletAddress}
+            challengeId={selectedChallenge?.id ?? 'default'}
+            onDone={(result) => {
+              setEvalResult(result);
+              goTo(6);
+              showToast('✓ Proof-of-Skill verified on GenLayer');
+            }}
+          />
+        )}
 
-        {/* ✅ UPDATED — pass evalResult to Screen6 */}
         {state.step === 6 && state.selTrack && (
           <Screen6Results
             selTrack={state.selTrack}
             walletAddress={state.walletAddress}
             poolEntry={state.poolEntry}
             evalResult={evalResult}
-            onRestart={restart}
+            onRestart={handleRestart}
             onToast={showToast}
           />
         )}

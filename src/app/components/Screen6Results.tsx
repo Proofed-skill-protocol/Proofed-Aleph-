@@ -167,7 +167,7 @@ export default function Screen6({
         <div className="fb-box">
           <div className="fb-head pos">✓ Strengths</div>
           <div className="fb-items">
-            {strengths.map((s, i) => (
+            {strengths.map((s: string, i: number) => (
               <div key={i} className="fb-item">
                 <span className="fb-b pos">+</span><span>{s}</span>
               </div>
@@ -177,7 +177,7 @@ export default function Screen6({
         <div className="fb-box">
           <div className="fb-head neg">↑ Improvements</div>
           <div className="fb-items">
-            {improvements.map((s, i) => (
+            {improvements.map((s: string, i: number) => (
               <div key={i} className="fb-item">
                 <span className="fb-b neg">→</span><span>{s}</span>
               </div>

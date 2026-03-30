@@ -39,7 +39,7 @@ export default async function main(client: GenLayerClient<any>) {
 
     const deployedContractAddress =
       (client.chain as GenLayerChain).id === localnet.id
-        ? receipt.data.contract_address
+        ? receipt.data?.contract_address
         : (receipt.txDataDecoded as DecodedDeployData)?.contractAddress;
 
     console.log(`Contract deployed at address: ${deployedContractAddress}`);

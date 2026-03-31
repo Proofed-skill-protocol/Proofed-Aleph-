@@ -4,8 +4,9 @@ type Level = 'beginner' | 'intermediate' | 'advanced';
 
 interface ScreenAdaptivePathProps {
   category: string;
-  level:    Level;
-  onStart:  () => void;
+  level:    'beginner' | 'intermediate' | 'advanced';
+  onProve:  () => void;
+  onStart?: () => void;
   onBack:   () => void;
 }
 
@@ -49,7 +50,7 @@ const LEVEL_META: Record<Level, { color: string; tagline: string }> = {
   advanced:     { color: 'var(--purple, #8a5cf6)', tagline: 'A direct path to demonstrating expert-level skills on-chain.' },
 };
 
-export default function ScreenAdaptivePath({ category, level, onStart, onBack }: ScreenAdaptivePathProps) {
+export default function ScreenAdaptivePath({ category, level, onProve, onStart, onBack }: ScreenAdaptivePathProps) {
   const steps = PATHS[level];
   const meta  = LEVEL_META[level];
   const label = level.charAt(0).toUpperCase() + level.slice(1);
@@ -92,7 +93,7 @@ export default function ScreenAdaptivePath({ category, level, onStart, onBack }:
         Complete each step at your own pace. When ready, push your project to GitHub and submit for AI evaluation and on-chain verification.
       </div>
 
-      <button className="btn btn-main" style={{ width: '100%', marginTop: 24 }} onClick={onStart}>
+      <button className="btn btn-main" style={{ width: '100%', marginTop: 24 }} onClick={onStart ?? onProve}>
         Start this path →
       </button>
       <button className="btn btn-ghost" style={{ width: '100%', marginTop: 10 }} onClick={onBack}>

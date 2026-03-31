@@ -352,23 +352,24 @@ export default function Home() {
   }
 
   // ── Builder: Adaptive Path ────────────────────────────────────────────────
-  if (appMode === 'builder' && builderStep === 'adaptive') {
-    return (
-      <>
-        <div className="shell">
-          <Topbar />
-          <ScreenAdaptivePath
-            category={selCategory || 'Tech'}
-            level={userLevel}
-            onProve={() => { setBuilderStep('course'); }}
-            onBack={() => setBuilderStep('assess')}
-          />
-        </div>
-        <Toast message={toastMsg} onDone={clearToast} />
-        <style>{sharedStyles}</style>
-      </>
-    );
-  }
+if (appMode === 'builder' && builderStep === 'adaptive') {
+  return (
+    <>
+      <div className="shell">
+        <Topbar />
+        <ScreenAdaptivePath
+          category={selCategory || 'Tech'}
+          level={userLevel}
+          onStart={() => setBuilderStep('course')}
+          onProve={() => setBuilderStep('course')}
+          onBack={() => setBuilderStep('assess')}
+        />
+      </div>
+      <Toast message={toastMsg} onDone={clearToast} />
+      <style>{sharedStyles}</style>
+    </>
+  );
+}
 
   // ── Builder: Course (learn path) ─────────────────────────────────────────────
 if (appMode === 'builder' && builderStep === 'course') {
@@ -377,15 +378,15 @@ if (appMode === 'builder' && builderStep === 'course') {
       <div className="shell">
         <Topbar />
         <ScreenCourse
-          category={selCategory || 'Tech'}
-          level={userLevel}
-          onSubmit={() => {
-  pickTrack('smartcontracts', 5);  // ensure track is set
-  setBuilderStep('flow');
-  goTo(4);
-}}
-          onBack={() => setBuilderStep('adaptive')}
-        />
+  category={selCategory || 'Tech'}
+  level={userLevel}
+  onSubmit={() => {
+    pickTrack('smartcontracts', 5);
+    setBuilderStep('flow');
+    goTo(4);
+  }}
+  onBack={() => setBuilderStep('adaptive')}
+/>
       </div>
       <Toast message={toastMsg} onDone={clearToast} />
       <style>{sharedStyles}</style>
@@ -401,7 +402,11 @@ if (appMode === 'builder' && builderStep === 'proveintro') {
         <Topbar />
         <ScreenProveIntro
           category={selCategory || 'Tech'}
-          onNext={() => {pickTrack('smartcontracts', 5);setBuilderStep('flow');goTo(2);}}
+          onNext={() => {
+  pickTrack('smartcontracts', 5);
+  setBuilderStep('flow');
+  goTo(4);
+}}
           onBack={() => setBuilderStep('mode')}
         />
       </div>

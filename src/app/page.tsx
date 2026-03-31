@@ -17,6 +17,7 @@ import Screen6Results     from './components/Screen6Results';
 import ScreenBuilderMode  from './components/ScreenBuilderMode';
 import ScreenLearnAssess  from './components/ScreenLearnAssess';
 import ScreenAdaptivePath from './components/ScreenAdaptivePath';
+import CompanyPreview from './components/CompanyPreview';
 
 type AppMode = 'hero' | 'builder' | 'company';
 type BuilderStep =
@@ -267,28 +268,7 @@ export default function Home() {
             )}
 
             {/* Company preview — MVP */}
-            {!verifyResult && (
-              <>
-                <div className="company-features">
-                  {[
-                    { ico: '⬡', title: 'On-chain verified',      desc: 'Every proof is stored on GenLayer — impossible to fake' },
-                    { ico: '◈', title: 'Real work, not resumes', desc: 'Candidates prove skills by building actual projects' },
-                    { ico: '⚡', title: 'Instant verification',   desc: 'One link. No back-and-forth. No interviews needed' },
-                  ].map((f, i) => (
-                    <div key={i} className="cfeat">
-                      <div className="cfeat-ico">{f.ico}</div>
-                      <div className="cfeat-text">
-                        <div className="cfeat-title">{f.title}</div>
-                        <div className="cfeat-desc">{f.desc}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="istrip" style={{ marginTop: 24 }}>
-                  <b>Coming soon for companies:</b> Create your own challenges, receive candidate submissions, and review verified performance scores — all in one place.
-                </div>
-              </>
-            )}
+           {!verifyResult && <CompanyPreview />}
           </div>
         </div>
         <Toast message={toastMsg} onDone={clearToast} />

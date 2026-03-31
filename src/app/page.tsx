@@ -338,6 +338,7 @@ export default function Home() {
             category={selCategory || 'Tech'}
             onResult={(level: 'beginner' | 'intermediate' | 'advanced', url?: string) => {
               setUserLevel(level);
+              if (url) setGithubUrl(url);
               pickTrack('smartcontracts', 5);
               setBuilderStep('adaptive');
             }}
@@ -359,7 +360,7 @@ export default function Home() {
           <ScreenAdaptivePath
             category={selCategory || 'Tech'}
             level={userLevel}
-            onProve={() => { setBuilderStep('flow'); goTo(4); }}
+            onProve={() => { setBuilderStep('course'); }}
             onBack={() => setBuilderStep('assess')}
           />
         </div>
@@ -378,7 +379,11 @@ if (appMode === 'builder' && builderStep === 'course') {
         <ScreenCourse
           category={selCategory || 'Tech'}
           level={userLevel}
-          onSubmit={() => { setBuilderStep('flow'); goTo(4); }}
+          onSubmit={() => {
+  pickTrack('smartcontracts', 5);  // ensure track is set
+  setBuilderStep('flow');
+  goTo(4);
+}}
           onBack={() => setBuilderStep('adaptive')}
         />
       </div>
@@ -396,7 +401,7 @@ if (appMode === 'builder' && builderStep === 'proveintro') {
         <Topbar />
         <ScreenProveIntro
           category={selCategory || 'Tech'}
-          onNext={() => { setBuilderStep('flow'); goTo(2); }}
+          onNext={() => {pickTrack('smartcontracts', 5);setBuilderStep('flow');goTo(2);}}
           onBack={() => setBuilderStep('mode')}
         />
       </div>

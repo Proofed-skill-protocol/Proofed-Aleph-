@@ -99,8 +99,8 @@ export default function Screen4({
 
       <div className="istrip">
         <b>Evaluation pipeline:</b> Claude AI evaluates →{' '}
-        <span style={{ color: 'var(--purple)' }}>3 GenLayer validators</span> reach consensus →
-        hash stored on <span style={{ color: 'var(--red)' }}>Avalanche Fuji</span> → badge minted
+        <span style={{ color: 'var(--purple)' }}>3 GenLayer validators</span> reach consensus → 
+          badge minted
       </div>
 
       <div className="btn-row">

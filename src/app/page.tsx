@@ -5,15 +5,26 @@ import { useAppState } from '@/lib/useAppState';
 import { TrackKey } from '@/lib/data';
 import type { Challenge } from '@/lib/genlayer/client';
 
-import Topbar          from './components/Topbar';
-import StepBar         from './components/StepBar';
-import Toast           from './components/Toast';
-import Screen1Category from './components/Screen1Category';
-import Screen2Track    from './components/Screen2Track';
-import Screen3Path     from './components/Screen3Path';
-import Screen4Submit   from './components/Screen4Submit';
-import Screen5Eval     from './components/Screen5Eval';
-import Screen6Results  from './components/Screen6Results';
+import Topbar             from './components/Topbar';
+import StepBar            from './components/StepBar';
+import Toast              from './components/Toast';
+import Screen1Category    from './components/Screen1Category';
+import Screen2Track       from './components/Screen2Track';
+import Screen3Path        from './components/Screen3Path';
+import Screen4Submit      from './components/Screen4Submit';
+import Screen5Eval        from './components/Screen5Eval';
+import Screen6Results     from './components/Screen6Results';
+import ScreenBuilderMode  from './components/ScreenBuilderMode';
+import ScreenLearnAssess  from './components/ScreenLearnAssess';
+import ScreenAdaptivePath from './components/ScreenAdaptivePath';
+
+type AppMode = 'hero' | 'builder' | 'company';
+type BuilderStep =
+  | 'category'
+  | 'mode'        // learn vs prove
+  | 'assess'      // skill assessment (learn path)
+  | 'adaptive'    // adaptive path recommendation (learn path)
+  | 'flow';       // existing screen flow (prove path)
 
 interface VerifyResult {
   found:       boolean;
@@ -27,6 +38,21 @@ interface VerifyResult {
   validators?: number[];
 }
 
+const COMING_SOON: Record<string, { title: string; items: string[] }> = {
+  marketing: {
+    title: 'Marketing',
+    items: ['Campaign analysis', 'Creative tasks', 'Performance evaluation'],
+  },
+  design: {
+    title: 'Design',
+    items: [
+      'Web3 UI/UX challenges',
+      'dApp and on-chain product design tasks',
+      'Evaluation of usability, clarity, and user flows',
+    ],
+  },
+};
+
 export default function Home() {
   const {
     state, goTo, pickCat, pickTrack, markStepDone,
@@ -37,8 +63,14 @@ export default function Home() {
   const [toastMsg,          setToastMsg]          = useState<string | null>(null);
   const [evalResult,        setEvalResult]        = useState<any>(null);
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
-  const [mode,              setMode]              = useState<'hero' | 'builder' | 'company'>('hero');
 
+  const [appMode,       setAppMode]       = useState<AppMode>('hero');
+  const [builderStep,   setBuilderStep]   = useState<BuilderStep>('category');
+  const [selCategory,   setSelCategory]   = useState<string>('');
+  const [userLevel,     setUserLevel]     = useState<'beginner' | 'intermediate' | 'advanced'>('beginner');
+  const [comingSoon,    setComingSoon]    = useState<string | null>(null);
+
+  // Company verify
   const [verifyInput,  setVerifyInput]  = useState('');
   const [verifyResult, setVerifyResult] = useState<VerifyResult | null>(null);
   const [verifying,    setVerifying]    = useState(false);
@@ -47,10 +79,13 @@ export default function Home() {
   const showToast  = useCallback((msg: string) => setToastMsg(msg), []);
   const clearToast = useCallback(() => setToastMsg(null), []);
 
-  const handleRestart = useCallback(() => {
+  const fullReset = useCallback(() => {
     setEvalResult(null);
     setSelectedChallenge(null);
-    setMode('hero');
+    setAppMode('hero');
+    setBuilderStep('category');
+    setSelCategory('');
+    setComingSoon(null);
     restart();
   }, [restart]);
 
@@ -73,20 +108,57 @@ export default function Home() {
         body: JSON.stringify({ verifyId }),
       });
       if (res.ok) {
-        const data = await res.json();
-        setVerifyResult(data);
+        setVerifyResult(await res.json());
       } else {
         setVerifyResult({ found: false, txHash: verifyId });
       }
     } catch {
-      setVerifyError('Could not verify proof — check your connection and try again.');
+      setVerifyError('Could not verify — check your connection and try again.');
     } finally {
       setVerifying(false);
     }
   };
 
+  // ── Coming soon overlay ─────────────────────────────────────────────────
+  if (appMode === 'builder' && comingSoon && COMING_SOON[comingSoon]) {
+    const cs = COMING_SOON[comingSoon];
+    return (
+      <>
+        <div className="shell">
+          <Topbar />
+          <div className="screen on">
+            <button className="btn btn-ghost" style={{ marginBottom: 28 }}
+              onClick={() => setComingSoon(null)}>← Back</button>
+            <p className="ey">coming soon</p>
+            <h1><em>{cs.title}</em></h1>
+            <p className="lead">This category is under construction. Here&apos;s what&apos;s coming:</p>
+            <div className="cs-list">
+              {cs.items.map((item, i) => (
+                <div key={i} className="cs-item">
+                  <span style={{ color: 'var(--green)', fontFamily: 'var(--mono)', fontSize: '0.85rem', minWidth: 16 }}>→</span>
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+            <div className="istrip" style={{ marginTop: 32 }}>
+              Want to be notified when {cs.title} launches? Join our community on Discord or follow us on X.
+            </div>
+            <button className="btn btn-ghost" style={{ width: '100%', marginTop: 16 }}
+              onClick={() => setComingSoon(null)}>← Back to categories</button>
+          </div>
+        </div>
+        <Toast message={toastMsg} onDone={clearToast} />
+        <style>{`
+          .cs-list { display: flex; flex-direction: column; gap: 0; margin-top: 8px; }
+          .cs-item { display: flex; align-items: baseline; gap: 14px; padding: 16px 0; border-bottom: 1px solid var(--border); font-size: 0.95rem; color: var(--text); line-height: 1.5; }
+          .cs-item:first-child { border-top: 1px solid var(--border); }
+        `}</style>
+      </>
+    );
+  }
+
   // ── Hero ──────────────────────────────────────────────────────────────────
-  if (mode === 'hero') {
+  if (appMode === 'hero') {
     return (
       <>
         <div className="shell">
@@ -97,13 +169,13 @@ export default function Home() {
             <p className="hero-not">Not what you&apos;ve learned.</p>
             <p className="hero-desc">Complete real tasks, get evaluated by AI, and generate verifiable proof of skill — stored on-chain forever.</p>
             <div className="entry-grid">
-              <div className="entry-card entry-builder" onClick={() => setMode('builder')}>
+              <div className="entry-card entry-builder" onClick={() => { setAppMode('builder'); setBuilderStep('category'); }}>
                 <div className="entry-icon">⚡</div>
                 <div className="entry-label">For Builders</div>
                 <div className="entry-desc">Start proving your skills. Complete challenges, get scored by AI validators, earn a verifiable badge.</div>
                 <div className="entry-cta entry-cta-green">Start proving →</div>
               </div>
-              <div className="entry-card entry-company" onClick={() => setMode('company')}>
+              <div className="entry-card entry-company" onClick={() => setAppMode('company')}>
                 <div className="entry-icon">◈</div>
                 <div className="entry-label">For Companies</div>
                 <div className="entry-desc">Evaluate candidates through real work — not interviews. Verify any Proof badge instantly.</div>
@@ -120,20 +192,20 @@ export default function Home() {
           </div>
         </div>
         <Toast message={toastMsg} onDone={clearToast} />
-        <style>{styles}</style>
+        <style>{sharedStyles}</style>
       </>
     );
   }
 
   // ── Company ───────────────────────────────────────────────────────────────
-  if (mode === 'company') {
+  if (appMode === 'company') {
     return (
       <>
         <div className="shell">
           <Topbar />
           <div className="company-wrap">
             <button className="btn btn-ghost" style={{ marginBottom: 24 }}
-              onClick={() => { setMode('hero'); setVerifyResult(null); setVerifyError(null); setVerifyInput(''); }}>
+              onClick={() => { setAppMode('hero'); setVerifyResult(null); setVerifyError(null); setVerifyInput(''); }}>
               ← Back
             </button>
             <p className="ey">for companies</p>
@@ -143,10 +215,8 @@ export default function Home() {
             <div className="field">
               <label className="fl">Proof verification link</label>
               <input className="inp" type="text" placeholder="https://verify.proofed.xyz/abc123ef"
-                value={verifyInput}
-                onChange={e => setVerifyInput(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleVerify()}
-              />
+                value={verifyInput} onChange={e => setVerifyInput(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && handleVerify()} />
             </div>
             <button className="btn btn-main" style={{ width: '100%', marginBottom: 24 }}
               disabled={!verifyInput.trim() || verifying} onClick={handleVerify}>
@@ -159,9 +229,9 @@ export default function Home() {
               <div className="verify-result-card">
                 {!verifyResult.found ? (
                   <div className="vr-notfound">
-                    <div className="vr-notfound-icon">⚠</div>
-                    <div className="vr-notfound-title">Proof not found</div>
-                    <div className="vr-notfound-desc">No on-chain proof found for this ID. The candidate may not have completed evaluation yet, or the link may be incorrect.</div>
+                    <div style={{ fontSize: '2rem', marginBottom: 12, color: 'orange' }}>⚠</div>
+                    <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>Proof not found</div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--muted)', lineHeight: 1.6 }}>No on-chain proof found for this ID. The candidate may not have completed evaluation yet, or the link may be incorrect.</div>
                   </div>
                 ) : (
                   <>
@@ -172,17 +242,17 @@ export default function Home() {
                     <div className="vr-rows">
                       {verifyResult.track    && <div className="vr-row"><span className="vr-key">TRACK</span><span className="vr-val">{verifyResult.track}</span></div>}
                       {verifyResult.passed !== undefined && <div className="vr-row"><span className="vr-key">STATUS</span><span className="vr-val" style={{ color: verifyResult.passed ? 'var(--green)' : 'orange' }}>{verifyResult.passed ? '✓ PASSED' : '✗ DID NOT PASS'}</span></div>}
-                      {verifyResult.github   && <div className="vr-row"><span className="vr-key">REPO</span><a href={verifyResult.github} target="_blank" rel="noreferrer" className="vr-val vr-link">{verifyResult.github}</a></div>}
+                      {verifyResult.github   && <div className="vr-row"><span className="vr-key">REPO</span><a href={verifyResult.github} target="_blank" rel="noreferrer" style={{ color: 'var(--green)', textDecoration: 'none' }}>{verifyResult.github}</a></div>}
                       {verifyResult.date     && <div className="vr-row"><span className="vr-key">DATE</span><span className="vr-val">{verifyResult.date}</span></div>}
                       {verifyResult.txHash   && <div className="vr-row"><span className="vr-key">TX</span><span className="vr-val" style={{ fontFamily: 'var(--mono)', fontSize: '0.75rem' }}>{verifyResult.txHash.slice(0,14)}...{verifyResult.txHash.slice(-8)}</span></div>}
                     </div>
                     {verifyResult.summary && <div className="vr-summary">&quot;{verifyResult.summary}&quot;</div>}
                     {verifyResult.validators && (
-                      <div className="vr-validators">
+                      <div style={{ paddingTop: 12, borderTop: '1px solid var(--border)' }}>
                         <div style={{ fontSize: '0.72rem', color: 'var(--muted)', marginBottom: 8, letterSpacing: 1 }}>⬡ GENLAYER VALIDATORS</div>
                         <div style={{ display: 'flex', gap: 10 }}>
                           {verifyResult.validators.map((s, i) => (
-                            <div key={i} className="vr-val-chip">
+                            <div key={i} style={{ background: 'rgba(0,229,160,0.06)', border: '1px solid rgba(0,229,160,0.2)', borderRadius: 8, padding: '10px 16px', textAlign: 'center' }}>
                               <div style={{ fontSize: '0.68rem', color: 'var(--muted)' }}>V-0{i+1}</div>
                               <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--green)', fontFamily: 'var(--mono)' }}>{s}</div>
                               <div style={{ fontSize: '0.65rem', color: 'var(--green)' }}>✓</div>
@@ -196,56 +266,194 @@ export default function Home() {
               </div>
             )}
 
+            {/* Company preview — MVP */}
             {!verifyResult && (
-              <div className="company-features">
-                {[
-                  { ico: '⬡', title: 'On-chain verified', desc: 'Every proof is stored on GenLayer — impossible to fake' },
-                  { ico: '◈', title: 'Real work, not resumes', desc: 'Candidates prove skills by building actual projects' },
-                  { ico: '⚡', title: 'Instant verification', desc: 'One link. No back-and-forth. No interviews needed' },
-                ].map((f, i) => (
-                  <div key={i} className="cfeat">
-                    <div className="cfeat-ico">{f.ico}</div>
-                    <div className="cfeat-text">
-                      <div className="cfeat-title">{f.title}</div>
-                      <div className="cfeat-desc">{f.desc}</div>
+              <>
+                <div className="company-features">
+                  {[
+                    { ico: '⬡', title: 'On-chain verified',      desc: 'Every proof is stored on GenLayer — impossible to fake' },
+                    { ico: '◈', title: 'Real work, not resumes', desc: 'Candidates prove skills by building actual projects' },
+                    { ico: '⚡', title: 'Instant verification',   desc: 'One link. No back-and-forth. No interviews needed' },
+                  ].map((f, i) => (
+                    <div key={i} className="cfeat">
+                      <div className="cfeat-ico">{f.ico}</div>
+                      <div className="cfeat-text">
+                        <div className="cfeat-title">{f.title}</div>
+                        <div className="cfeat-desc">{f.desc}</div>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+                <div className="istrip" style={{ marginTop: 24 }}>
+                  <b>Coming soon for companies:</b> Create your own challenges, receive candidate submissions, and review verified performance scores — all in one place.
+                </div>
+              </>
             )}
           </div>
         </div>
         <Toast message={toastMsg} onDone={clearToast} />
-        <style>{styles}</style>
+        <style>{sharedStyles}</style>
       </>
     );
   }
 
-  // ── Builder flow ──────────────────────────────────────────────────────────
+  // ── Builder: Category ─────────────────────────────────────────────────────
+  if (appMode === 'builder' && builderStep === 'category') {
+    return (
+      <>
+        <div className="shell">
+          <Topbar />
+          <Screen1Category
+            selCat={state.selCat}
+            onPickCat={(cat) => {
+              if (COMING_SOON[cat]) { setComingSoon(cat); return; }
+              setSelCategory(cat);
+              pickCat(cat);
+              setBuilderStep('mode');
+            }}
+            onPickChallenge={(c) => {
+              setSelectedChallenge(c);
+              if (c) { setSelCategory('tech'); pickCat('tech'); setBuilderStep('mode'); }
+            }}
+            onNext={() => setBuilderStep('mode')}
+            onBack={() => setAppMode('hero')}
+          />
+        </div>
+        <Toast message={toastMsg} onDone={clearToast} />
+        <style>{sharedStyles}</style>
+      </>
+    );
+  }
+
+  // ── Builder: Learn vs Prove ───────────────────────────────────────────────
+  if (appMode === 'builder' && builderStep === 'mode') {
+    return (
+      <>
+        <div className="shell">
+          <Topbar />
+          <ScreenBuilderMode
+            category={selCategory || 'Tech'}
+            onLearn={() => setBuilderStep('assess')}
+            onProve={() => { setBuilderStep('flow'); goTo(2); }}
+            onBack={() => setBuilderStep('category')}
+          />
+        </div>
+        <Toast message={toastMsg} onDone={clearToast} />
+        <style>{sharedStyles}</style>
+      </>
+    );
+  }
+
+  // ── Builder: Skill Assessment ─────────────────────────────────────────────
+  if (appMode === 'builder' && builderStep === 'assess') {
+    return (
+      <>
+        <div className="shell">
+          <Topbar />
+          <ScreenLearnAssess
+            category={selCategory || 'Tech'}
+            onResult={(level: 'beginner' | 'intermediate' | 'advanced', url?: string) => {
+              setUserLevel(level);
+              if (url) setGithubUrl(url);
+              setBuilderStep('adaptive');
+            }}
+            onBack={() => setBuilderStep('mode')}
+          />
+        </div>
+        <Toast message={toastMsg} onDone={clearToast} />
+        <style>{sharedStyles}</style>
+      </>
+    );
+  }
+
+  // ── Builder: Adaptive Path ────────────────────────────────────────────────
+  if (appMode === 'builder' && builderStep === 'adaptive') {
+    return (
+      <>
+        <div className="shell">
+          <Topbar />
+          <ScreenAdaptivePath
+            category={selCategory || 'Tech'}
+            level={userLevel}
+            onProve={() => { setBuilderStep('flow'); goTo(4); }}
+            onBack={() => setBuilderStep('assess')}
+          />
+        </div>
+        <Toast message={toastMsg} onDone={clearToast} />
+        <style>{sharedStyles}</style>
+      </>
+    );
+  }
+
+  // ── Builder: Main screen flow (Prove path) ────────────────────────────────
   return (
     <>
       <div className="shell">
         <Topbar />
         <StepBar current={state.step} />
-        {state.step === 1 && (<Screen1Category selCat={state.selCat} onPickCat={pickCat} onPickChallenge={(c) => setSelectedChallenge(c)} onNext={() => goTo(2)} />)}
-        {state.step === 2 && (<Screen2Track selTrack={state.selTrack} onPickTrack={(track: TrackKey, total: number) => pickTrack(track, total)} onNext={() => goTo(3)} onBack={() => goTo(1)} />)}
-        {state.step === 3 && state.selTrack && (<Screen3Path selTrack={state.selTrack} doneSteps={state.doneSteps} allStepsDone={allStepsDone} onMarkDone={markStepDone} onNext={() => goTo(4)} onBack={() => goTo(2)} />)}
-        {state.step === 4 && (<Screen4Submit poolEntry={state.poolEntry} githubUrl={state.githubUrl} walletAddress={state.walletAddress} isFormValid={isFormValid} onSelectPool={selectPool} onGithubChange={setGithubUrl} onWalletChange={setWalletAddress} onSubmit={() => goTo(5)} onBack={() => goTo(3)} />)}
+
+        {state.step === 2 && (
+          <Screen2Track
+            selTrack={state.selTrack}
+            onPickTrack={(track: TrackKey, total: number) => pickTrack(track, total)}
+            onNext={() => goTo(3)}
+            onBack={() => setBuilderStep('mode')}
+          />
+        )}
+        {state.step === 3 && state.selTrack && (
+          <Screen3Path
+            selTrack={state.selTrack}
+            doneSteps={state.doneSteps}
+            allStepsDone={allStepsDone}
+            onMarkDone={markStepDone}
+            onNext={() => goTo(4)}
+            onBack={() => goTo(2)}
+          />
+        )}
+        {state.step === 4 && (
+          <Screen4Submit
+            poolEntry={state.poolEntry}
+            githubUrl={state.githubUrl}
+            walletAddress={state.walletAddress}
+            isFormValid={isFormValid}
+            onSelectPool={selectPool}
+            onGithubChange={setGithubUrl}
+            onWalletChange={setWalletAddress}
+            onSubmit={() => goTo(5)}
+            onBack={() => builderStep === 'adaptive' ? setBuilderStep('adaptive') : goTo(3)}
+          />
+        )}
         {state.step === 5 && state.selTrack && (
-          <Screen5Eval selTrack={state.selTrack} githubUrl={state.githubUrl} walletAddress={state.walletAddress} challengeId={selectedChallenge?.id ?? 'default'}
-            onDone={(result) => { setEvalResult(result); goTo(6); showToast('✓ Proof-of-Skill verified on GenLayer'); }} />
+          <Screen5Eval
+            selTrack={state.selTrack}
+            githubUrl={state.githubUrl}
+            walletAddress={state.walletAddress}
+            challengeId={selectedChallenge?.id ?? 'default'}
+            onDone={(result) => {
+              setEvalResult(result);
+              goTo(6);
+              showToast('✓ Proof-of-Skill verified on GenLayer');
+            }}
+          />
         )}
         {state.step === 6 && state.selTrack && (
-          <Screen6Results selTrack={state.selTrack} walletAddress={state.walletAddress} poolEntry={state.poolEntry} evalResult={evalResult} onRestart={handleRestart} onToast={showToast} />
+          <Screen6Results
+            selTrack={state.selTrack}
+            walletAddress={state.walletAddress}
+            poolEntry={state.poolEntry}
+            evalResult={evalResult}
+            onRestart={fullReset}
+            onToast={showToast}
+          />
         )}
       </div>
       <Toast message={toastMsg} onDone={clearToast} />
-      <style>{styles}</style>
+      <style>{sharedStyles}</style>
     </>
   );
 }
 
-const styles = `
+const sharedStyles = `
 .hero-wrap { padding: 48px 0 64px; }
 .hero-eyebrow { font-size: 11px; letter-spacing: 2px; color: var(--green); margin-bottom: 28px; font-family: var(--mono); }
 .hero-title { font-size: clamp(3rem, 9vw, 5.5rem); font-weight: 800; line-height: 1.0; margin: 0 0 4px; letter-spacing: -2px; }
@@ -284,13 +492,5 @@ const styles = `
 .vr-row:last-child { border-bottom: none; }
 .vr-key { font-size: 0.68rem; letter-spacing: 1.5px; color: var(--muted); font-family: var(--mono); min-width: 60px; }
 .vr-val { font-size: 0.88rem; color: var(--text); }
-.vr-link { color: var(--green); text-decoration: none; }
-.vr-link:hover { text-decoration: underline; }
 .vr-summary { font-size: 0.85rem; color: var(--muted); font-style: italic; line-height: 1.6; padding: 12px 0; border-top: 1px solid var(--border); margin-bottom: 16px; }
-.vr-validators { padding-top: 12px; border-top: 1px solid var(--border); }
-.vr-val-chip { background: rgba(0,229,160,0.06); border: 1px solid rgba(0,229,160,0.2); border-radius: 8px; padding: 10px 16px; text-align: center; }
-.vr-notfound { text-align: center; padding: 24px 0; }
-.vr-notfound-icon { font-size: 2rem; margin-bottom: 12px; color: orange; }
-.vr-notfound-title { font-size: 1rem; font-weight: 700; color: var(--text); margin-bottom: 8px; }
-.vr-notfound-desc { font-size: 0.85rem; color: var(--muted); line-height: 1.6; }
 `;

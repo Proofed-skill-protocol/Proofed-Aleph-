@@ -27,12 +27,11 @@ export default function Screen6({
   const realTxHash    = evalResult?.txHash ?? null;
   const isRealTx      = !!realTxHash;
   const displayTxHash = realTxHash ?? ('0x' + randomHex(64));
-
-  const grade    = getGrade(score);
-  const verifyId = displayTxHash.slice(2, 10);
-  const verifyUrl = `https://verify.proofed.xyz/${verifyId}`;
-  const short    = walletAddress ? walletAddress.slice(0, 6) + '...' + walletAddress.slice(-4) : '0x????...????';
-  const pool     = poolEntry === 0 ? 100 : poolEntry === 2 ? 200 : 500;
+  const verifyId      = displayTxHash.slice(2, 10);
+  const verifyUrl     = `https://verify.proofed.xyz/${verifyId}`;
+  const short         = walletAddress ? walletAddress.slice(0, 6) + '...' + walletAddress.slice(-4) : '0x????...????';
+  const pool          = poolEntry === 0 ? 100 : poolEntry === 2 ? 200 : 500;
+  const grade         = getGrade(score);
 
   const [displayScore, setDisplayScore] = useState(0);
   const [barWidths,    setBarWidths]    = useState([0, 0, 0, 0]);
@@ -42,7 +41,6 @@ export default function Screen6({
     evalResult?.validatorScores ??
     [0, 1, 2].map(() => Math.max(50, Math.min(99, score + Math.floor(Math.random() * 9) - 4)))
   );
-  const [blockNum] = useState(() => (18000000 + Math.floor(Math.random() * 99999)).toLocaleString());
 
   const participants = [
     { addr: short + ' (you)', score, you: true },
@@ -88,10 +86,10 @@ export default function Screen6({
 
   return (
     <div className="screen on">
-      <p className="ey">step 06 — proof issued</p>
+      <p className="ey">proof issued</p>
       <h1>Skill <em>verified</em></h1>
       <p className="lead" style={{ marginBottom: 20 }}>
-        Evaluated by AI · Validated by consensus · {isRealTx ? 'Stored on-chain ✓' : 'Stored off-chain'}
+        Evaluated by AI · Validated by GenLayer consensus · {isRealTx ? 'Stored on-chain ✓' : 'Stored off-chain'}
       </p>
 
       {/* Score ring */}
@@ -101,8 +99,7 @@ export default function Screen6({
             <circle cx="46" cy="46" r="38" fill="none" stroke="#1A2335" strokeWidth="7" />
             <circle cx="46" cy="46" r="38" fill="none" stroke="#00E5A0" strokeWidth="7"
               strokeLinecap="round" strokeDasharray="238.8" strokeDashoffset={offset}
-              style={{ transition: 'stroke-dashoffset 0.05s linear' }}
-            />
+              style={{ transition: 'stroke-dashoffset 0.05s linear' }} />
           </svg>
           <div className="ring-num">
             <span className="ring-val">{displayScore}</span>
@@ -121,9 +118,7 @@ export default function Screen6({
           <div className="pool-result-ico">◈</div>
           <div className="pool-result-text">
             <div className="pool-result-title">${poolEntry} USDC entered</div>
-            <div className="pool-result-sub">
-              Your score of {score} determines your share. Results finalize when the pool closes.
-            </div>
+            <div className="pool-result-sub">Your score of {score} determines your share. Results finalize when the pool closes.</div>
           </div>
         </div>
       )}
@@ -183,7 +178,7 @@ export default function Screen6({
         </div>
       </div>
 
-      {/* On-chain proof */}
+      {/* GenLayer on-chain proof */}
       <div className="block">
         <div className="block-head">
           <span className="bhl" style={{ color: 'var(--purple)' }}>⬡ GenLayer · On-Chain Proof</span>
@@ -195,7 +190,6 @@ export default function Screen6({
           <div className="hash-box">{displayTxHash}</div>
           <div className="avax-meta">
             <span className="avax-kv"><span className="avax-k">TX </span><span style={{ color: 'var(--text)' }}>{displayTxHash.slice(0, 10)}...{displayTxHash.slice(-6)}</span></span>
-            <span className="avax-kv"><span className="avax-k">BLOCK </span><span style={{ color: 'var(--text)' }}>{blockNum}</span></span>
             <span className="avax-kv"><span className="avax-k">CHAIN </span><span style={{ color: 'var(--text)' }}>GenLayer Studionet</span></span>
           </div>
           {isRealTx && (
@@ -229,8 +223,8 @@ export default function Screen6({
         </table>
       </div>
 
-      {/* ── SHARE YOUR PROOF BADGE ── */}
-      <div className="block share-block">
+      {/* Share your proof badge */}
+      <div className="block" style={{ borderColor: 'rgba(0,229,160,0.3)' }}>
         <div className="block-head">
           <span className="bhl" style={{ color: 'var(--green)' }}>⬡ Share Your Proof</span>
           <span className="chip chip-green">PORTABLE BADGE</span>
@@ -240,34 +234,27 @@ export default function Screen6({
             Add this to your LinkedIn, job application, or portfolio.
             Anyone can verify your proof is real — stored on-chain, impossible to fake.
           </p>
-
-          {/* Badge preview */}
-          <div className="proof-badge-preview">
-            <div className="pbadge-left">
-              <div className="pbadge-hex">⬡</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,229,160,0.06)', border: '1px solid rgba(0,229,160,0.25)', borderRadius: 10, padding: '16px 20px', marginBottom: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ fontSize: '1.8rem', color: 'var(--green)' }}>⬡</div>
               <div>
-                <div className="pbadge-title">PROOF-OF-SKILL</div>
-                <div className="pbadge-track">{PATHS[selTrack].label.toUpperCase()} · WEB3</div>
+                <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text)', letterSpacing: 1 }}>PROOF-OF-SKILL</div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--muted)', letterSpacing: 1, marginTop: 2 }}>{PATHS[selTrack].label.toUpperCase()} · VERIFIED</div>
               </div>
             </div>
-            <div className="pbadge-score">{score}</div>
+            <div style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--green)', fontFamily: 'var(--mono)' }}>{score}</div>
           </div>
-
-          {/* Verify URL */}
-          <div className="verify-url-box">
-            <span className="verify-url-text">{verifyUrl}</span>
+          <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid var(--border)', borderRadius: 8, padding: '10px 14px', marginBottom: 14 }}>
+            <span style={{ fontSize: '0.78rem', fontFamily: 'var(--mono)', color: 'var(--green)', wordBreak: 'break-all' }}>{verifyUrl}</span>
           </div>
-
-          {/* Action buttons */}
-          <div className="share-btns">
-            <button className="btn btn-main share-btn" onClick={handleCopyBadge}>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            <button className="btn btn-main" style={{ flex: 1, minWidth: 140 }} onClick={handleCopyBadge}>
               {badgeCopied ? '✓ Copied!' : '🔗 Copy Proof Link'}
             </button>
-            <button className="btn btn-ghost share-btn linkedin-btn" onClick={handleLinkedIn}>
+            <button className="btn btn-ghost" style={{ flex: 1, minWidth: 140, borderColor: '#0077b5', color: '#0077b5' }} onClick={handleLinkedIn}>
               in Add to LinkedIn
             </button>
           </div>
-
           <p style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: 12 }}>
             Companies can verify your proof at any time — just share the link above.
           </p>
@@ -275,49 +262,8 @@ export default function Screen6({
       </div>
 
       <button className="btn btn-main" onClick={onRestart} style={{ width: '100%', marginTop: 8 }}>
-        ↺ Try another track
+        ↺ Start over
       </button>
-
-      <style>{`
-        .share-block { border-color: rgba(0, 229, 160, 0.3); }
-        .proof-badge-preview {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          background: rgba(0, 229, 160, 0.06);
-          border: 1px solid rgba(0, 229, 160, 0.25);
-          border-radius: 10px;
-          padding: 16px 20px;
-          margin-bottom: 14px;
-        }
-        .pbadge-left { display: flex; align-items: center; gap: 12px; }
-        .pbadge-hex { font-size: 1.8rem; color: var(--green); }
-        .pbadge-title { font-size: 0.85rem; font-weight: 700; color: var(--text); letter-spacing: 1px; }
-        .pbadge-track { font-size: 0.72rem; color: var(--muted); letter-spacing: 1px; margin-top: 2px; }
-        .pbadge-score { font-size: 2rem; font-weight: 800; color: var(--green); font-family: var(--mono); }
-        .verify-url-box {
-          background: rgba(255,255,255,0.04);
-          border: 1px solid var(--border);
-          border-radius: 8px;
-          padding: 10px 14px;
-          margin-bottom: 14px;
-          overflow: hidden;
-        }
-        .verify-url-text {
-          font-size: 0.78rem;
-          font-family: var(--mono);
-          color: var(--green);
-          word-break: break-all;
-        }
-        .share-btns {
-          display: flex;
-          gap: 10px;
-          flex-wrap: wrap;
-        }
-        .share-btn { flex: 1; min-width: 140px; }
-        .linkedin-btn { border-color: #0077b5; color: #0077b5; }
-        .linkedin-btn:hover { background: rgba(0, 119, 181, 0.1); }
-      `}</style>
     </div>
   );
 }

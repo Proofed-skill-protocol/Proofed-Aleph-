@@ -8,33 +8,14 @@ interface Screen1Props {
   selCat:          string | null;
   onPickCat:       (cat: string) => void;
   onNext:          () => void;
+  onBack?:         () => void;
   onPickChallenge: (challenge: Challenge | null) => void;
 }
 
-const COMING_SOON: Record<string, { title: string; items: string[] }> = {
-  marketing: {
-    title: 'Marketing',
-    items: [
-      'Campaign analysis',
-      'Creative tasks',
-      'Performance evaluation',
-    ],
-  },
-  design: {
-    title: 'Design',
-    items: [
-      'Web3 UI/UX challenges',
-      'dApp and on-chain product design tasks',
-      'Evaluation of usability, clarity, and user flows',
-    ],
-  },
-};
-
-export default function Screen1({ selCat, onPickCat, onPickChallenge, onNext }: Screen1Props) {
-  const [challenges,    setChallenges]    = useState<Challenge[]>([]);
-  const [loadingChain,  setLoadingChain]  = useState(true);
-  const [selChallenge,  setSelChallenge]  = useState<Challenge | null>(null);
-  const [comingSoon,    setComingSoon]    = useState<string | null>(null);
+export default function Screen1({ selCat, onPickCat, onPickChallenge, onNext, onBack }: Screen1Props) {
+  const [challenges,   setChallenges]   = useState<Challenge[]>([]);
+  const [loadingChain, setLoadingChain] = useState(true);
+  const [selChallenge, setSelChallenge] = useState<Challenge | null>(null);
 
   useEffect(() => {
     getAllChallenges()
@@ -56,65 +37,11 @@ export default function Screen1({ selCat, onPickCat, onPickChallenge, onNext }: 
 
   const canContinue = !!selCat || !!selChallenge;
 
-  // ── Coming soon overlay ─────────────────────────────────────────────────
-  if (comingSoon && COMING_SOON[comingSoon]) {
-    const cs = COMING_SOON[comingSoon];
-    return (
-      <div className="screen on">
-        <button
-          className="btn btn-ghost"
-          style={{ marginBottom: 28 }}
-          onClick={() => setComingSoon(null)}
-        >
-          ← Back
-        </button>
-
-        <p className="ey">coming soon</p>
-        <h1><em>{cs.title}</em></h1>
-
-        <p className="lead">
-          This category is under construction. Here&apos;s what&apos;s coming:
-        </p>
-
-        <div className="cs-list">
-          {cs.items.map((item, i) => (
-            <div key={i} className="cs-item">
-              <span className="cs-dot">→</span>
-              <span>{item}</span>
-            </div>
-          ))}
-        </div>
-
-        <div className="istrip" style={{ marginTop: 32 }}>
-          Want to be notified when {cs.title} launches?
-          Join our community on Discord or follow us on X.
-        </div>
-
-        <button
-          className="btn btn-ghost"
-          style={{ width: '100%', marginTop: 16 }}
-          onClick={() => setComingSoon(null)}
-        >
-          ← Back to categories
-        </button>
-
-        <style>{`
-          .cs-list { display: flex; flex-direction: column; gap: 0; margin-top: 8px; }
-          .cs-item {
-            display: flex; align-items: baseline; gap: 14px;
-            padding: 16px 0; border-bottom: 1px solid var(--border);
-            font-size: 0.95rem; color: var(--text); line-height: 1.5;
-          }
-          .cs-item:first-child { border-top: 1px solid var(--border); }
-          .cs-dot { color: var(--green); font-family: var(--mono); font-size: 0.85rem; min-width: 16px; }
-        `}</style>
-      </div>
-    );
-  }
-
-  // ── Normal category screen ──────────────────────────────────────────────
   return (
     <div className="screen on">
+      {onBack && (
+        <button className="btn btn-ghost" style={{ marginBottom: 28 }} onClick={onBack}>← Back</button>
+      )}
       <p className="ey">step 01 — set your goal</p>
       <h1>What do you want to <em>learn?</em></h1>
       <p className="lead">
@@ -122,33 +49,22 @@ export default function Screen1({ selCat, onPickCat, onPickChallenge, onNext }: 
         and we verify it on-chain.
       </p>
 
-      {/* Hardcoded categories */}
       <div className="cat-grid">
-        {CATEGORIES.map(cat => {
-          const isComingSoon = !!COMING_SOON[cat.key];
-          return (
-            <div
-              key={cat.key}
-              className={`cat ${cat.locked && !isComingSoon ? 'locked' : ''} ${selCat === cat.key && !selChallenge ? 'sel' : ''}`}
-              style={{ cursor: cat.locked && !isComingSoon ? 'default' : 'pointer' }}
-              onClick={() => {
-                if (isComingSoon) {
-                  setComingSoon(cat.key);
-                } else if (!cat.locked) {
-                  handlePickCat(cat.key);
-                }
-              }}
-            >
-              {cat.locked && <span className="soon-badge">SOON</span>}
-              <div className="cat-ico">{cat.icon}</div>
-              <div className="cat-name">{cat.name}</div>
-              <div className="cat-desc">{cat.desc}</div>
-            </div>
-          );
-        })}
+        {CATEGORIES.map(cat => (
+          <div
+            key={cat.key}
+            className={`cat ${selCat === cat.key && !selChallenge ? 'sel' : ''}`}
+            style={{ cursor: 'pointer' }}
+            onClick={() => handlePickCat(cat.key)}
+          >
+            {cat.locked && <span className="soon-badge">SOON</span>}
+            <div className="cat-ico">{cat.icon}</div>
+            <div className="cat-name">{cat.name}</div>
+            <div className="cat-desc">{cat.desc}</div>
+          </div>
+        ))}
       </div>
 
-      {/* Live on-chain challenges */}
       {!loadingChain && challenges.length > 0 && (
         <div style={{ marginTop: 32 }}>
           <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 12, letterSpacing: 1 }}>

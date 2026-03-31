@@ -1,5 +1,8 @@
 'use client';
 
+import { useState } from 'react';
+import { connectWallet } from '@/lib/genlayer/client';
+
 interface Screen4Props {
   poolEntry: number | null;
   githubUrl: string;
@@ -23,6 +26,22 @@ export default function Screen4({
   onSubmit,
   onBack,
 }: Screen4Props) {
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+
+  const handleConnect = async () => {
+    setIsConnecting(true);
+    setErrorMsg('');
+    try {
+      const addr = await connectWallet();
+      onWalletChange(addr);
+    } catch (err: any) {
+      setErrorMsg(err.message);
+    } finally {
+      setIsConnecting(false);
+    }
+  };
+
   const poolBarText =
     poolEntry === null
       ? ''
@@ -88,13 +107,21 @@ export default function Screen4({
       </div>
       <div className="field">
         <label className="fl">Your wallet address</label>
-        <input
-          className="inp"
-          type="text"
-          placeholder="0x..."
-          value={walletAddress}
-          onChange={e => onWalletChange(e.target.value)}
-        />
+        {walletAddress ? (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div className="inp" style={{ flex: 1, backgroundColor: 'rgba(255,255,255,0.05)', color: 'var(--green)' }}>
+              ✓ Connected: {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
+            </div>
+            <button className="btn btn-ghost" onClick={() => onWalletChange('')}>Disconnect</button>
+          </div>
+        ) : (
+          <div>
+            <button className="btn btn-main" onClick={handleConnect} disabled={isConnecting}>
+              {isConnecting ? 'Connecting...' : 'Connect MetaMask'}
+            </button>
+            {errorMsg && <p style={{ color: 'var(--blue)', opacity: 0.8, fontSize: '0.8rem', marginTop: 8 }}>{errorMsg}</p>}
+          </div>
+        )}
       </div>
 
       <div className="istrip">

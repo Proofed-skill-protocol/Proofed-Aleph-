@@ -56,10 +56,10 @@ export default function BuilderPage() {
         <StepBar current={state.step} />
         {state.step === 1 && (<Screen1Category selCat={state.selCat} onPickCat={pickCat} onPickChallenge={(c) => setSelectedChallenge(c)} onNext={() => goTo(2)} />)}
         {state.step === 2 && (<Screen2Track selTrack={state.selTrack} onPickTrack={(track: TrackKey, total: number) => pickTrack(track, total)} onNext={() => goTo(3)} onBack={() => goTo(1)} />)}
-        {state.step === 3 && state.selTrack && (<Screen3Path selTrack={state.selTrack} doneSteps={state.doneSteps} allStepsDone={allStepsDone} onMarkDone={markStepDone} onNext={() => goTo(4)} onBack={() => goTo(2)} />)}
+        {state.step === 3 && state.selTrack && (<Screen3Path selTrack={state.selTrack} doneSteps={state.doneSteps} onMarkDone={markStepDone} onNext={() => goTo(4)} onBack={() => goTo(2)} onCuratedChallenge={(c) => setSelectedChallenge(c)} />)}
         {state.step === 4 && (<Screen4Submit poolEntry={state.poolEntry} githubUrl={state.githubUrl} walletAddress={state.walletAddress} isFormValid={isFormValid} onSelectPool={selectPool} onGithubChange={setGithubUrl} onWalletChange={setWalletAddress} onSubmit={() => goTo(5)} onBack={() => goTo(3)} />)}
         {state.step === 5 && state.selTrack && (
-          <Screen5Eval selTrack={state.selTrack} githubUrl={state.githubUrl} walletAddress={state.walletAddress} challengeId={selectedChallenge?.id ?? 'default'}
+          <Screen5Eval selTrack={state.selTrack} githubUrl={state.githubUrl} walletAddress={state.walletAddress} challengeId={selectedChallenge?.id ?? 'default'} dynamicChallenge={selectedChallenge}
             onDone={(result) => { setEvalResult(result); goTo(6); showToast('✓ Proof-of-Skill verified on GenLayer'); }} />
         )}
         {state.step === 6 && state.selTrack && (

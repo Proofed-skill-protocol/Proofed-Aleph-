@@ -1,21 +1,33 @@
-import { createClient, createAccount } from 'genlayer-js';
+import { createClient } from 'genlayer-js';
+import { testnetBradbury } from 'genlayer-js/chains';
 import type { Address } from 'genlayer-js/types';
 
-const RPC_URL  = process.env.NEXT_PUBLIC_GENLAYER_RPC_URL  || 'https://studio.genlayer.com/api';
-const CONTRACT = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS  || '';
+const CONTRACT = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0x5D0f832B8B8220CB422ea8fdd3856cEcAE74B03f';
 
-let _account: ReturnType<typeof createAccount> | null = null;
+interface EthereumProvider {
+  isMetaMask?: boolean;
+  request: (args: { method: string; params?: any[] }) => Promise<any>;
+}
+declare global { interface Window { ethereum?: EthereumProvider; } }
 
-function getAccount() {
-  if (!_account) _account = createAccount();
-  return _account;
+export async function connectWallet(): Promise<string> {
+  if (typeof window === 'undefined' || !window.ethereum) {
+    throw new Error("MetaMask is not installed. Please install it to continue.");
+  }
+  try {
+    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+    if (!accounts || accounts.length === 0) throw new Error("No accounts found");
+    return accounts[0];
+  } catch (err: any) {
+    if (err.code === 4001) throw new Error("Connection request cancelled by user.");
+    throw new Error(`Connection failed: ${err.message}`);
+  }
 }
 
-function getClient() {
-  return createClient({
-    endpoint: RPC_URL,
-    account:  getAccount(),
-  });
+export function getClient(address?: string) {
+  const config: any = { chain: testnetBradbury };
+  if (address) config.account = address as Address;
+  return createClient(config);
 }
 
 export interface Challenge {
@@ -51,63 +63,55 @@ export function parseFeedback(raw: string): Feedback {
 }
 
 export async function createChallenge(params: {
-  challengeId: string; title: string; description: string; rubric: string;
-}): Promise<string | null> {
-  if (!CONTRACT) return null;
-  try {
-    const tx = await getClient().writeContract({
-      address: CONTRACT as Address,
-      functionName: 'create_challenge',
-      args: [params.challengeId, params.title, params.description, params.rubric],
-      value: BigInt(0),
-    });
-    return String(tx);
-  } catch (err) { console.error('create_challenge failed:', err); return null; }
+  challengeId: string; title: string; description: string; rubric: string; walletAddress: string;
+}): Promise<string> {
+  if (!CONTRACT) throw new Error("Contract address is not configured");
+  const tx = await getClient(params.walletAddress).writeContract({
+    address: CONTRACT as Address,
+    functionName: 'create_challenge',
+    args: [params.challengeId, params.title, params.description, params.rubric],
+    value: BigInt(0),
+  });
+  return String(tx);
 }
 
 export async function submitToChallenge(params: {
-  challengeId: string; githubUrl: string;
-}): Promise<string | null> {
-  if (!CONTRACT) return null;
-  try {
-    const tx = await getClient().writeContract({
-      address: CONTRACT as Address,
-      functionName: 'submit',
-      args: [params.challengeId, params.githubUrl],
-      value: BigInt(0),
-    });
-    return String(tx);
-  } catch (err) { console.error('submit failed:', err); return null; }
+  challengeId: string; githubUrl: string; walletAddress: string;
+}): Promise<string> {
+  if (!CONTRACT) throw new Error("Contract address is not configured");
+  const tx = await getClient(params.walletAddress).writeContract({
+    address: CONTRACT as Address,
+    functionName: 'submit',
+    args: [params.challengeId, params.githubUrl],
+    value: BigInt(0),
+  });
+  return String(tx);
 }
 
 export async function evaluateSubmission(params: {
-  challengeId: string;
-}): Promise<string | null> {
-  if (!CONTRACT) return null;
-  try {
-    const tx = await getClient().writeContract({
-      address: CONTRACT as Address,
-      functionName: 'evaluate',
-      args: [params.challengeId],
-      value: BigInt(0),
-    });
-    return String(tx);
-  } catch (err) { console.error('evaluate failed:', err); return null; }
+  challengeId: string; walletAddress: string;
+}): Promise<string> {
+  if (!CONTRACT) throw new Error("Contract address is not configured");
+  const tx = await getClient(params.walletAddress).writeContract({
+    address: CONTRACT as Address,
+    functionName: 'evaluate',
+    args: [params.challengeId],
+    value: BigInt(0),
+  });
+  return String(tx);
 }
 
 export async function claimReward(params: {
-  challengeId: string;
-}): Promise<string | null> {
-  if (!CONTRACT) return null;
-  try {
-    const tx = await getClient().writeContract({
-      address: CONTRACT as Address,
-      functionName: 'claim_reward',
-      args: [params.challengeId],
-      value: BigInt(0),
-    });
-    return String(tx);
-  } catch (err) { console.error('claim_reward failed:', err); return null; }
+  challengeId: string; walletAddress: string;
+}): Promise<string> {
+  if (!CONTRACT) throw new Error("Contract address is not configured");
+  const tx = await getClient(params.walletAddress).writeContract({
+    address: CONTRACT as Address,
+    functionName: 'claim_reward',
+    args: [params.challengeId],
+    value: BigInt(0),
+  });
+  return String(tx);
 }
 
 export async function getAllChallenges(): Promise<Challenge[]> {
@@ -118,7 +122,7 @@ export async function getAllChallenges(): Promise<Challenge[]> {
       functionName: 'get_all_challenges',
       args: [],
     });
-    return (result as Challenge[]) ?? [];
+    return (result as unknown as Challenge[]) ?? [];
   } catch (err) { console.error('get_all_challenges failed:', err); return []; }
 }
 
@@ -130,7 +134,7 @@ export async function getChallenge(challengeId: string): Promise<Challenge | nul
       functionName: 'get_challenge',
       args: [challengeId],
     });
-    return (result as Challenge) ?? null;
+    return (result as unknown as Challenge) ?? null;
   } catch (err) { console.error('get_challenge failed:', err); return null; }
 }
 
@@ -144,7 +148,7 @@ export async function getSubmission(params: {
       functionName: 'get_submission',
       args: [params.challengeId, params.submitterAddress],
     });
-    return (result as Submission) ?? null;
+    return (result as unknown as Submission) ?? null;
   } catch (err) { console.error('get_submission failed:', err); return null; }
 }
 
@@ -158,7 +162,7 @@ export async function getReputation(address: string): Promise<{
       functionName: 'get_reputation',
       args: [address],
     });
-    return result as { cumulative_score: number; challenges_passed: number };
+    return result as unknown as { cumulative_score: number; challenges_passed: number };
   } catch (err) { console.error('get_reputation failed:', err); return null; }
 }
 
@@ -172,10 +176,6 @@ export async function getLeaderboard(): Promise<{
       functionName: 'get_leaderboard',
       args: [],
     });
-    return result as { address: string; cumulative_score: number; challenges_passed: number; }[];
+    return result as unknown as { address: string; cumulative_score: number; challenges_passed: number; }[];
   } catch (err) { console.error('get_leaderboard failed:', err); return []; }
-}
-
-export function getSessionAddress(): string {
-  return getAccount().address;
 }

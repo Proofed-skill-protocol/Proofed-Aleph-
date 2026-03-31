@@ -1,8 +1,8 @@
-// File: /Users/roheemah/Desktop/miniapp/test/Proofed-Aleph-/src/app/api/ipfs/upload/route.ts
-import * as entry from '../../../../../../src/app/api/ipfs/upload/route.js'
+// File: /Users/roheemah/Desktop/miniapp/test/Proofed-Aleph-/src/app/api/curate-path/route.ts
+import * as entry from '../../../../../src/app/api/curate-path/route.js'
 import type { NextRequest } from 'next/server.js'
 
-type TEntry = typeof import('../../../../../../src/app/api/ipfs/upload/route.js')
+type TEntry = typeof import('../../../../../src/app/api/curate-path/route.js')
 
 // Check that the entry is a valid entry
 checkFields<Diff<{

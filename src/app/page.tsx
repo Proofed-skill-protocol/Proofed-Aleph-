@@ -18,6 +18,8 @@ import ScreenBuilderMode  from './components/ScreenBuilderMode';
 import ScreenLearnAssess  from './components/ScreenLearnAssess';
 import ScreenAdaptivePath from './components/ScreenAdaptivePath';
 import CompanyPreview from './components/CompanyPreview';
+import ScreenCourse     from './components/ScreenCourse';
+import ScreenProveIntro from './components/ScreenProveIntro';
 
 type AppMode = 'hero' | 'builder' | 'company';
 type BuilderStep =
@@ -25,7 +27,9 @@ type BuilderStep =
   | 'mode'        // learn vs prove
   | 'assess'      // skill assessment (learn path)
   | 'adaptive'    // adaptive path recommendation (learn path)
-  | 'flow';       // existing screen flow (prove path)
+  | 'course'      // checklist course (learn path)  ← NEW
+  | 'proveintro'  // fast track overview (prove path) ← NEW
+  | 'flow';       // submit + eval + results
 
 interface VerifyResult {
   found:       boolean;
@@ -314,7 +318,7 @@ export default function Home() {
           <ScreenBuilderMode
             category={selCategory || 'Tech'}
             onLearn={() => setBuilderStep('assess')}
-            onProve={() => { setBuilderStep('flow'); goTo(2); }}
+            onProve={() => setBuilderStep('proveintro')}
             onBack={() => setBuilderStep('category')}
           />
         </div>
@@ -334,7 +338,7 @@ export default function Home() {
             category={selCategory || 'Tech'}
             onResult={(level: 'beginner' | 'intermediate' | 'advanced', url?: string) => {
               setUserLevel(level);
-              if (url) setGithubUrl(url);
+              pickTrack('smartcontracts', 5);
               setBuilderStep('adaptive');
             }}
             onBack={() => setBuilderStep('mode')}
@@ -364,6 +368,43 @@ export default function Home() {
       </>
     );
   }
+
+  // ── Builder: Course (learn path) ─────────────────────────────────────────────
+if (appMode === 'builder' && builderStep === 'course') {
+  return (
+    <>
+      <div className="shell">
+        <Topbar />
+        <ScreenCourse
+          category={selCategory || 'Tech'}
+          level={userLevel}
+          onSubmit={() => { setBuilderStep('flow'); goTo(4); }}
+          onBack={() => setBuilderStep('adaptive')}
+        />
+      </div>
+      <Toast message={toastMsg} onDone={clearToast} />
+      <style>{sharedStyles}</style>
+    </>
+  );
+}
+ 
+// ── Builder: Prove intro (prove path) ────────────────────────────────────────
+if (appMode === 'builder' && builderStep === 'proveintro') {
+  return (
+    <>
+      <div className="shell">
+        <Topbar />
+        <ScreenProveIntro
+          category={selCategory || 'Tech'}
+          onNext={() => { setBuilderStep('flow'); goTo(2); }}
+          onBack={() => setBuilderStep('mode')}
+        />
+      </div>
+      <Toast message={toastMsg} onDone={clearToast} />
+      <style>{sharedStyles}</style>
+    </>
+  );
+}
 
   // ── Builder: Main screen flow (Prove path) ────────────────────────────────
   return (

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { TrackKey } from './data';
 
 export type Step = 1 | 2 | 3 | 4 | 5 | 6;
@@ -29,6 +29,39 @@ const initialState: AppState = {
 
 export function useAppState() {
   const [state, setState] = useState<AppState>(initialState);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  // Load from sessionStorage on mount
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem('proofedAppState');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        setState({
+          ...initialState,
+          ...parsed,
+          doneSteps: new Set(parsed.doneSteps || []),
+        });
+      }
+    } catch (err) {
+      console.error('Failed to load state', err);
+    }
+    setIsHydrated(true);
+  }, []);
+
+  // Save to sessionStorage whenever state changes
+  useEffect(() => {
+    if (!isHydrated) return;
+    try {
+      const toStore = {
+        ...state,
+        doneSteps: Array.from(state.doneSteps),
+      };
+      sessionStorage.setItem('proofedAppState', JSON.stringify(toStore));
+    } catch (err) {
+      console.error('Failed to save state', err);
+    }
+  }, [state, isHydrated]);
 
   const goTo = (step: Step) => {
     setState(s => ({ ...s, step }));
@@ -70,6 +103,7 @@ export function useAppState() {
 
   const restart = () => {
     setState(initialState);
+    sessionStorage.removeItem('proofedAppState');
   };
 
   const isFormValid =
@@ -82,6 +116,7 @@ export function useAppState() {
 
   return {
     state,
+    isHydrated,
     goTo,
     pickCat,
     pickTrack,

@@ -37,6 +37,8 @@ export default function Screen6({
   const [displayScore, setDisplayScore] = useState(0);
   const [barWidths,    setBarWidths]    = useState([0, 0, 0, 0]);
   const [badgeCopied,  setBadgeCopied]  = useState(false);
+  const [ipfsBadge,    setIpfsBadge]    = useState<{ cid: string, url: string } | null>(null);
+  const [uploadingBadge, setUploadingBadge] = useState(false);
 
   const [validatorScores] = useState(() =>
     evalResult?.validatorScores ??
@@ -66,6 +68,36 @@ export default function Screen6({
     const t = setTimeout(() => setBarWidths(breakdown), 300);
     return () => clearTimeout(t);
   }, [breakdown]);
+
+  useEffect(() => {
+    // Only upload if evaluate ran and score is decent (e.g. >= 50 or passed flag)
+    if (score >= 50 && !ipfsBadge && !uploadingBadge) {
+      const uploadBadge = async () => {
+        setUploadingBadge(true);
+        try {
+          const res = await fetch('/api/ipfs/upload', {
+            method: 'POST',
+            body: JSON.stringify({
+              name: `Proofed Protocol: ${PATHS[selTrack].label}`,
+              challenge_title: PATHS[selTrack].label,
+              score,
+              feedback: summary,
+              walletAddress,
+            })
+          });
+          if (res.ok) {
+            const data = await res.json();
+            setIpfsBadge(data);
+          }
+        } catch (err) {
+          console.error('Failed to upload badge to IPFS:', err);
+        } finally {
+          setUploadingBadge(false);
+        }
+      };
+      uploadBadge();
+    }
+  }, [score, ipfsBadge, uploadingBadge, selTrack, summary, walletAddress]);
 
   const circ   = 238.8;
   const offset = circ - (displayScore / 100) * circ;
@@ -230,31 +262,58 @@ export default function Screen6({
       </div>
 
       {/* ── SHARE YOUR PROOF BADGE ── */}
-      <div className="block share-block">
-        <div className="block-head">
-          <span className="bhl" style={{ color: 'var(--green)' }}>⬡ Share Your Proof</span>
-          <span className="chip chip-green">PORTABLE BADGE</span>
+      <div className="block share-block" style={{ padding: '32px 24px', position: 'relative', overflow: 'hidden' }}>
+        <div className="badge-glow" />
+        <div className="block-head" style={{ borderBottom: 'none', marginBottom: 16 }}>
+          <span className="bhl" style={{ color: '#fff', fontSize: '1.2rem' }}>💎 Verifiable Skill Badge</span>
+          <span className="chip chip-green">IPFS / FILECOIN</span>
         </div>
-        <div className="block-body">
-          <p style={{ fontSize: '0.85rem', color: 'var(--muted)', marginBottom: 16, lineHeight: 1.6 }}>
-            Add this to your LinkedIn, job application, or portfolio.
-            Anyone can verify your proof is real — stored on-chain, impossible to fake.
+        <div className="block-body" style={{ position: 'relative', zIndex: 2 }}>
+          <p style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', marginBottom: 24, lineHeight: 1.6 }}>
+            Your achievement has been minted into a verifiable JSON credential and stored permanently on the decentralized web.
           </p>
 
-          {/* Badge preview */}
-          <div className="proof-badge-preview">
-            <div className="pbadge-left">
-              <div className="pbadge-hex">⬡</div>
-              <div>
-                <div className="pbadge-title">PROOF-OF-SKILL</div>
-                <div className="pbadge-track">{PATHS[selTrack].label.toUpperCase()} · WEB3</div>
+          {/* Premium Badge Presentation */}
+          <div className="premium-badge-card">
+            <div className="pb-top">
+              <div className="pb-brand">⬡ PROOFED PROTOCOL</div>
+              <div className="pb-date">{new Date().toISOString().split('T')[0]}</div>
+            </div>
+            <div className="pb-main">
+              <div className="pb-track">{PATHS[selTrack].label.toUpperCase()}</div>
+              <div className="pb-title">Verified Builder</div>
+            </div>
+            <div className="pb-bottom">
+              <div className="pb-score">
+                <span className="pb-score-val">{score}</span>
+                <span className="pb-score-lbl">/100</span>
+              </div>
+              <div className="pb-user">
+                <span>WALLET</span>
+                <span style={{ fontFamily: 'var(--mono)', color: '#fff' }}>{short}</span>
               </div>
             </div>
-            <div className="pbadge-score">{score}</div>
+            <div className="pb-glass-sheen" />
+          </div>
+
+          {/* IPFS Meta */}
+          <div className="ipfs-meta-box">
+            <div className="ipfs-row">
+              <span className="ipfs-k">STORAGE</span>
+              <span className="ipfs-v">{uploadingBadge ? 'Uploading to IPFS...' : 'IPFS + Filecoin ✓'}</span>
+            </div>
+            {ipfsBadge && (
+              <div className="ipfs-row">
+                <span className="ipfs-k">CID</span>
+                <a href={ipfsBadge.url} target="_blank" rel="noreferrer" className="ipfs-v ipfs-link">
+                  {ipfsBadge.cid.slice(0, 16)}...{ipfsBadge.cid.slice(-10)}
+                </a>
+              </div>
+            )}
           </div>
 
           {/* Verify URL */}
-          <div className="verify-url-box">
+          <div className="verify-url-box" style={{ background: 'rgba(0,0,0,0.2)', marginBottom: 20 }}>
             <span className="verify-url-text">{verifyUrl}</span>
           </div>
 
@@ -267,10 +326,6 @@ export default function Screen6({
               in Add to LinkedIn
             </button>
           </div>
-
-          <p style={{ fontSize: '0.75rem', color: 'var(--muted)', marginTop: 12 }}>
-            Companies can verify your proof at any time — just share the link above.
-          </p>
         </div>
       </div>
 
@@ -279,22 +334,49 @@ export default function Screen6({
       </button>
 
       <style>{`
-        .share-block { border-color: rgba(0, 229, 160, 0.3); }
-        .proof-badge-preview {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          background: rgba(0, 229, 160, 0.06);
-          border: 1px solid rgba(0, 229, 160, 0.25);
-          border-radius: 10px;
-          padding: 16px 20px;
-          margin-bottom: 14px;
+        .share-block { 
+          border: 1px solid rgba(0, 229, 160, 0.4); 
+          background: linear-gradient(145deg, rgba(20,25,35,0.95), rgba(10,15,25,0.98));
         }
-        .pbadge-left { display: flex; align-items: center; gap: 12px; }
-        .pbadge-hex { font-size: 1.8rem; color: var(--green); }
-        .pbadge-title { font-size: 0.85rem; font-weight: 700; color: var(--text); letter-spacing: 1px; }
-        .pbadge-track { font-size: 0.72rem; color: var(--muted); letter-spacing: 1px; margin-top: 2px; }
-        .pbadge-score { font-size: 2rem; font-weight: 800; color: var(--green); font-family: var(--mono); }
+        .badge-glow {
+          position: absolute; top: -50px; right: -50px;
+          --glow-color: rgba(0,229,160,0.15);
+          width: 250px; height: 250px;
+          background: radial-gradient(circle, var(--glow-color) 0%, transparent 70%);
+          border-radius: 50%; filter: blur(30px); z-index: 0;
+        }
+        .premium-badge-card {
+          position: relative;
+          background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+          border: 1px solid rgba(255,255,255,0.15);
+          border-radius: 16px; padding: 24px; margin-bottom: 20px;
+          overflow: hidden; backdrop-filter: blur(10px);
+          box-shadow: 0 20px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+          transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .premium-badge-card:hover { transform: translateY(-4px) scale(1.02); }
+        .pb-glass-sheen {
+          position: absolute; top: 0; left: -100%; width: 50%; height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+          transform: skewX(-20deg); animation: sheen 6s infinite;
+        }
+        @keyframes sheen { 0% { left: -100% } 20% { left: 200% } 100% { left: 200% } }
+        .pb-top { display: flex; justify-content: space-between; font-size: 0.65rem; color: rgba(255,255,255,0.5); font-family: var(--mono); letter-spacing: 1.5px; margin-bottom: 32px; }
+        .pb-brand { color: var(--green); }
+        .pb-track { font-size: 0.8rem; color: var(--green); margin-bottom: 4px; letter-spacing: 2px; text-transform: uppercase; font-weight: 600; }
+        .pb-title { font-size: 2rem; color: #fff; font-weight: 800; letter-spacing: -1px; margin-bottom: 32px; line-height: 1; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+        .pb-bottom { display: flex; justify-content: space-between; align-items: flex-end; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px; }
+        .pb-score { display: flex; align-items: baseline; }
+        .pb-score-val { font-size: 3rem; font-weight: 800; color: #fff; font-family: var(--mono); line-height: 0.8; }
+        .pb-score-lbl { font-size: 1rem; color: rgba(255,255,255,0.4); margin-left: 4px; }
+        .pb-user { display: flex; flex-direction: column; align-items: flex-end; font-size: 0.65rem; color: rgba(255,255,255,0.5); gap: 4px; }
+        .ipfs-meta-box { background: rgba(0,0,0,0.4); border-radius: 8px; padding: 12px 16px; margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.05); position: relative; z-index: 2; }
+        .ipfs-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.8rem; }
+        .ipfs-row:last-child { margin-bottom: 0; }
+        .ipfs-k { color: var(--muted); font-family: var(--mono); font-size: 0.7rem; letter-spacing: 1px; }
+        .ipfs-v { color: #fff; }
+        .ipfs-link { color: var(--green); text-decoration: none; font-family: var(--mono); }
+        .ipfs-link:hover { text-decoration: underline; color: #fff; }
         .verify-url-box {
           background: rgba(255,255,255,0.04);
           border: 1px solid var(--border);
@@ -302,6 +384,7 @@ export default function Screen6({
           padding: 10px 14px;
           margin-bottom: 14px;
           overflow: hidden;
+          position: relative; z-index: 2;
         }
         .verify-url-text {
           font-size: 0.78rem;
@@ -313,6 +396,7 @@ export default function Screen6({
           display: flex;
           gap: 10px;
           flex-wrap: wrap;
+          position: relative; z-index: 2;
         }
         .share-btn { flex: 1; min-width: 140px; }
         .linkedin-btn { border-color: #0077b5; color: #0077b5; }

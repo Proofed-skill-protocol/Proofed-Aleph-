@@ -78,31 +78,57 @@ Reward pools incentivize genuine effort — not just finishing. Rewards are dist
 
 ## How it works
 
+```mermaid
 flowchart TD
+A[Enter Proofed] --> B{Builder or Company?}
 
-A[Enter Proofed] --> B{Builder or Company}
-
-%% BUILDER
 B -->|Builder| C[Select Category<br/>Tech / Marketing / Design]
+B -->|Company| M[Company View<br/>Preview mode]
 
-C --> D{Mode}
-
+C --> D{Mode?}
 D -->|Learn| E[Skill Assessment<br/>GitHub / Experience / Questions]
-E --> F[Level Assigned<br/>Beginner / Intermediate / Advanced]
+D -->|Prove| L[Submit Portfolio<br/>GitHub / portfolio]
+
+E --> F[Level Assigned<br/>Beginner / Mid / Advanced]
 F --> G[Adaptive Learning Path]
 G --> H[Curated Content + Task]
 H --> I[Submit Work]
-I --> J[AI + Consensus Evaluation]
-J --> K[Generate Certificate<br/>Shareable Link]
 
-D -->|Prove| L[Submit GitHub / Portfolio]
+I --> J[AI + Consensus Evaluation]
 L --> J
 
-%% COMPANY
-B -->|Company| M[Company View (Preview)]
-M --> N[View Candidate Proofs]
-M --> O[Future: Create Challenges]
+J --> K[Generate Certificate<br/>Shareable link]
 
+M --> N[View Candidate Proofs<br/>Browse verified skills]
+M --> O[Create Challenges<br/>Coming soon]
+```
+Builder Experience
+
+Learn Mode
+	•	system evaluates your level
+	•	gives you a personalized path
+	•	you complete tasks
+	•	you receive proof of your skill
+
+Prove Mode
+	•	skip learning
+	•	submit your work (GitHub / portfolio)
+	•	get evaluated
+	•	receive proof immediately
+
+👉 Designed for users who already have skills and need validation (e.g. job applications)
+
+⸻
+
+🏢 Company (Preview)
+
+Companies can:
+	•	review candidates through verified proof of work
+	•	access real performance instead of resumes
+
+Future:
+	•	create challenges
+	•	evaluate candidates through Proofed
 
 
 ## Evaluation Rubric
@@ -174,21 +200,37 @@ HackerRank tells you someone passed a test on their platform. Proofed tells the 
 - We issue proof for completing real work
 - The credential is cryptographically verifiable and lives forever on-chain
 
----
+```
+## 💰 Business Model
 
-## Business Model
+### Revenue Streams
 
-| Stream | Model | Potential |
+| Stream | Pricing | Type | Potential |
+|---|---|---|---|
+| Sponsored Bounties | 10–15% fee on pool | B2B | Core engine at scale |
+| Entry-Based Pools | $2–$5 cut per entry | B2C | Recurring user engagement |
+| Verification API | $99–$499/mo subscription | B2B | High-margin hiring layer |
+| Premium Evaluation | Per-use or subscription | B2B + B2C | Upsell on engaged users |
+| Paid Certificates | $59 (Beginner/Mid) · $79 (Advanced) | B2C | High-margin, scalable |
+| Company Challenges | TBD | B2B | Talent pipeline play |
+
+### Unit Economics
+
+> 10% fee × $1,000 pool × 100 active bounties/month = **$10,000 MRR from fees alone** — before any B2B or certificate revenue.
+
+### Certificate Pricing
+
+| Level | Price | Benchmark |
 |---|---|---|
-| Sponsored Bounties | 10–15% fee on pool | Core engine at scale |
-| Entry-Based Pools | Cut of $2–$5 entries | Recurring user engagement |
-| Verification API | $99–$499/mo subscription | High-margin B2B hiring layer |
-| Premium Evaluation | Per-use or subscription | Upsell on engaged users |
+| Beginner / Mid | $59 | Comparable to Coursera / LinkedIn |
+| Advanced | $79 | Premium tier — higher resume value |
+```
+## Vision
 
-Unit economics: 10% fee × $1,000 pool × 100 active bounties/month = $10,000 MRR from fees alone, before any B2B revenue.
-
----
-
+A world where:
+	•	skills are proven through real work
+	•	credentials are verifiable
+	•	opportunities are based on what you can build
 
 ## Getting Started
 
@@ -210,11 +252,10 @@ ANTHROPIC_API_KEY=sk-ant-...
 Without an API key the app runs in simulated mode with realistic pre-set results.
 
 ---
+🤝 Feedback
 
-## One-Line Pitch
+Open to feedback, ideas, and collaborations.
+:::
 
-*"Proofed Protocol is the first skill verification layer for Web3 — where anyone trying to break into blockchain can prove they can actually build, not just that they watched a course."*
-
----
 General track: https://devspot.app/projects/1510
 

@@ -2,7 +2,6 @@
 
 > The verification layer for the Web3 talent economy.
 
-**Aleph Hackathon 2026** · Avalanche · GenLayer · PL_Genesis
 
 ---
 

@@ -2,19 +2,20 @@
 
 > The verification layer for the Web3 talent economy.
 
-**Aleph Hackathon 2026** · Avalanche · GenLayer · PL_Genesis
-
 ---
 
 ## The Problem
 
-Hundreds of thousands of people are trying to break into Web3. They find scattered YouTube videos, outdated tutorials, and courses that hand out certificates for watching content.
+In the age of AI, knowledge is no longer a reliable signal. Anyone can generate code, content, or answers instantly — but we still lack a way to verify what someone can **actually build**.
 
-That certificate doesn't prove they can build anything.
+Current systems rely on degrees, certificates, and resumes. But they don't reflect real capability.
 
-At the same time, AI can now write code. So the question is no longer "can you memorize syntax" — it's "can you actually build something real, understand what you built, and prove it."
+> **There is no reliable way to prove real skills through real work.**
+> This is not just a learning problem. It is a verification problem for the future of work.
 
-There is no tamper-proof, verifiable way to answer that question. Until now.
+Hundreds of thousands of people are trying to break into Web3. They find scattered YouTube videos, outdated tutorials, and courses that hand out certificates for watching content. That certificate doesn't prove they can build anything.
+
+At the same time, AI can now write code. The question is no longer *"can you memorize syntax"* — it's *"can you actually build something real, understand what you built, and prove it."*
 
 ---
 
@@ -22,85 +23,111 @@ There is no tamper-proof, verifiable way to answer that question. Until now.
 
 | Stat | Data |
 |---|---|
-| Average online course completion rate | 5–15% |
 | Web3 developers active globally (2024) | ~25,000 |
 | Projected Web3 market size by 2034 | $226 billion |
 | CAGR of Web3 market | 48.2% |
 | Developers who say certificates don't reflect real skill | 87% |
-| Companies that struggle to verify candidate skills | 74% |
+| Companies that struggle to verify candidate skills | 80% |
+| Average online course completion rate | 5–15% |
 
 The market needs hundreds of thousands of verified Web3 builders. The tools to verify them don't exist yet.
 
 ---
 
-## What is Proofed Protocol?
+## Solution
 
-Proofed Protocol is a coordination layer between real work, AI evaluation, decentralized validation, and on-chain proof.
+Proofed introduces a **proof-of-skill layer**:
 
-We don't create content. We curate personalized learning paths, evaluate real work, and convert the result into a permanent, tamper-proof credential stored on-chain.
+- Users complete or submit real work
+- AI + decentralized consensus evaluate it
+- Results become verifiable, on-chain credentials
 
-Not a certificate for watching a video. Proof that you can actually build.
+Proofed Protocol is a coordination layer between real work, AI evaluation, decentralized validation, and on-chain proof. **Proof that you can actually build.**
 
 ---
 
-## Our Value Proposition
+## Key Differentiator
+
+HackerRank tells you someone passed a test on their platform. Proofed tells the whole world — permanently, on-chain, trustlessly — that a person built something real and earned a score for it.
+
+| | Traditional Platforms | Proofed |
+|---|---|---|
+| Credential type | Course completion | Real work output |
+| Verifiability | Self-reported | On-chain, cryptographic |
+| Tamper-proof | No | Yes |
+| Economic incentive | None | Score-proportional rewards |
+
+---
+
+## How It Works
+
+```mermaid
+flowchart TD
+A[Enter Proofed] --> B{Builder or Company?}
+
+B -->|Builder| C[Select Category<br/>Tech / Marketing / Design]
+B -->|Company| M[Company View<br/>Preview mode]
+
+C --> D{Mode?}
+D -->|Learn| E[Skill Assessment<br/>GitHub / Experience / Questions]
+D -->|Prove| L[Submit Portfolio<br/>GitHub / portfolio]
+
+E --> F[Level Assigned<br/>Beginner / Mid / Advanced]
+F --> G[Adaptive Learning Path]
+G --> H[Curated Content + Task]
+H --> I[Submit Work]
+
+I --> J[AI + Consensus Evaluation]
+L --> J
+
+J --> K[Generate Certificate<br/>Shareable link]
+
+M --> N[View Candidate Proofs<br/>Browse verified skills]
+M --> O[Create Challenges<br/>Coming soon]
+```
+
+### Builder — Learn Mode
+- System evaluates your current level
+- Gives you a personalized learning path
+- You complete real tasks
+- You receive on-chain proof of your skill
+
+### Builder — Prove Mode
+> Designed for users who already have skills and need validation (e.g. job applications)
+
+- Skip the learning path
+- Submit your existing work (GitHub / portfolio)
+- Get evaluated immediately
+- Receive proof on-chain
+
+### Company (Preview)
+Companies can:
+- Review candidates through verified proof of work
+- Access real performance data instead of resumes
+
+**Coming soon:** create custom challenges and evaluate candidates directly through Proofed.
+
+---
+
+## Value Proposition
 
 **1. Personalized learning path based on your goals**
-The user defines what they want to learn. The AI builds a curated path — structured resources in the right order, matched to their track and level.
+You define what you want to learn and prove. The AI builds a curated path — structured resources in the right order, matched to your track and level.
 
 **2. A community where real progress is measured**
 Progress isn't self-reported. It's verified. Every completion, every score, every proof is on-chain — visible, comparable, and real.
 
 **3. On-chain validation of tasks and projects**
-When a user completes a task, the result is evaluated by AI, validated by decentralized consensus, and stored permanently on Avalanche. Anyone can verify it. No one can fake it.
+When you complete a task, the result is evaluated by AI, validated by decentralized consensus, and stored permanently on Avalanche. Anyone can verify it. No one can fake it.
 
 **4. Gamification centered on real learning**
-Reward pools incentivize genuine effort — not just finishing. Rewards are distributed proportionally by score. The better you actually build, the more you earn. Organizations can fund bounties for specific skills they need.
-
----
-
-## How we compare
-
-| | Proofed Protocol | Coursera / Udemy | HackerRank / Coderbyte | ChatGPT / AI tools | LearnWeb3 / Alchemy U | Layer3 / RabbitHole |
-|---|---|---|---|---|---|---|
-| Personalized learning path | ✅ | ❌ | ❌ | ⚠️ No structure | ⚠️ Fixed curriculum | ❌ |
-| Evaluates real work | ✅ | ❌ | ⚠️ Coding tests only | ⚠️ No verification | ❌ | ❌ |
-| Decentralized AI consensus | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| On-chain tamper-proof proof | ✅ | ❌ | ❌ | ❌ | ❌ | ⚠️ Activity only |
-| Verifiable by anyone | ✅ | ❌ | ❌ | ❌ | ❌ | ⚠️ Partial |
-| Real economic rewards by score | ✅ | ❌ | ❌ | ❌ | ❌ | ⚠️ Quizzes only |
-| Web3 native | ✅ | ❌ | ❌ | ❌ | ✅ | ✅ |
-| Credential can be faked | ❌ Never | ✅ Easily | ✅ Easily | ✅ Screenshot | ✅ Easily | ⚠️ Partially |
-
----
-
-## How it works
-
-```
-User picks a Web3 category
-        ↓
-Picks a learning track
-        ↓
-Receives a curated path — 3 resources in order
-        ↓
-Completes resources → task unlocks
-        ↓
-Builds the task and pushes to GitHub
-        ↓
-Optionally joins a reward pool ($2 or $5 entry)
-        ↓
-Claude AI evaluates against a visible rubric (0–100)
-        ↓
-3 GenLayer validators reach independent consensus
-        ↓
-Cryptographic hash stored permanently on Avalanche
-        ↓
-Proof-of-Skill badge issued + rewards split by score
-```
+Reward pools incentivize genuine effort — not just finishing. Rewards are distributed proportionally by score. The better you build, the more you earn.
 
 ---
 
 ## Evaluation Rubric
+
+Every submission is scored against the same transparent rubric — visible to the user before they start. No black box.
 
 | Criteria | Weight |
 |---|---|
@@ -108,8 +135,6 @@ Proof-of-Skill badge issued + rewards split by score
 | Code structure & cleanliness | 30% |
 | Responsiveness / correctness | 20% |
 | Bonus polish | 10% |
-
-Rubric is visible to the user before they start. No black box.
 
 ---
 
@@ -145,56 +170,44 @@ This creates real economic incentive to do genuine work — not just finish a co
 |---|---|---|
 | AI Agent | Claude API (Anthropic) | Learning path curation, rubric evaluation, structured feedback |
 | Decentralized Validation | GenLayer · Bradbury Testnet | 3-validator consensus, Optimistic Democracy, Equivalence Principle |
-| Blockchain | Avalanche Fuji C-Chain | Tamper-proof hash storage, badge linkage, reward distribution |
 | Frontend | Next.js 14 · Tailwind CSS | Full product flow, leaderboard, public verification page |
 | Reward Logic | TypeScript | Proportional score-based pool distribution |
 
-API Repository: https://github.com/mauroradino/Proofed_API · Live: https://proofed-api.vercel.app
-
----
-
-## Hackathon Track Alignment
-
-### ⬡ Avalanche
-- `ProofStorage.sol` deployed on Avalanche Fuji C-Chain
-- Evaluation result hashed and stored on-chain
-- Public verification page — anyone can verify any proof
-
-### ⬡ GenLayer
-- `SkillEvaluator.py` intelligent contract deployed on Bradbury testnet
-- Implements Optimistic Democracy consensus
-- Implements Equivalence Principle
-- 3 validators independently score — consensus finalizes the result
-- Directly aligned with GenLayer Future of Work use case
-- Rally.fun listed as reference project in GenLayer docs — we are building the next layer
-
-### ⬡ PL_Genesis
-- Submitted to Crecimiento Track in PL_Genesis Hackathon
-- AI + crypto with strong real-world use case
-- Scalable infrastructure for the Web3 talent economy
-
----
-
-## Key Differentiator
-
-HackerRank tells you someone passed a test on their platform. Proofed tells the whole world — permanently, on-chain, trustlessly — that a person built something real and earned a score for it.
-
-- Existing platforms issue certificates for completing courses
-- We issue proof for completing real work
-- The credential is cryptographically verifiable and lives forever on-chain
+API Repository: [Proofed_API](https://github.com/mauroradino/Proofed_API) · Live: [proofed-api.vercel.app](https://proofed-api.vercel.app)
 
 ---
 
 ## Business Model
 
-| Stream | Model | Potential |
-|---|---|---|
-| Sponsored Bounties | 10–15% fee on pool | Core engine at scale |
-| Entry-Based Pools | Cut of $2–$5 entries | Recurring user engagement |
-| Verification API | $99–$499/mo subscription | High-margin B2B hiring layer |
-| Premium Evaluation | Per-use or subscription | Upsell on engaged users |
+### Revenue Streams
 
-Unit economics: 10% fee × $1,000 pool × 100 active bounties/month = $10,000 MRR from fees alone, before any B2B revenue.
+| Stream | Pricing | Type | Potential |
+|---|---|---|---|
+| Sponsored Bounties | 10–15% fee on pool | B2B | Core engine at scale |
+| Entry-Based Pools | $2–$5 cut per entry | B2C | Recurring user engagement |
+| Verification API | $99–$499/mo subscription | B2B | High-margin hiring layer |
+| Premium Evaluation | Per-use or subscription | B2B + B2C | Upsell on engaged users |
+| Paid Certificates | $59 (Beginner/Mid) · $79 (Advanced) | B2C | High-margin, scalable |
+| Company Challenges | TBD | B2B | Talent pipeline play |
+
+### Unit Economics
+
+> 10% fee × $1,000 pool × 100 active bounties/month = **$10,000 MRR from fees alone** — before any B2B or certificate revenue.
+
+### Certificate Pricing
+
+| Level | Price | Benchmark |
+|---|---|---|
+| Beginner / Mid | $59 | Comparable to Coursera / LinkedIn |
+| Advanced | $79 | Premium tier — higher resume value |
+
+---
+
+## Hackathon
+
+- Submitted to the **Crecimiento Track** in [PL_Genesis Hackathon](https://devspot.app/projects/1510)
+- AI + crypto with strong real-world use case
+- Scalable infrastructure for the Web3 talent economy
 
 ---
 
@@ -208,21 +221,28 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open http://localhost:3000
+Open [http://localhost:3000](http://localhost:3000)
 
 ```bash
 # .env.local
 ANTHROPIC_API_KEY=sk-ant-...
 ```
 
-Without an API key the app runs in simulated mode with realistic pre-set results.
+> Without an API key the app runs in simulated mode with realistic pre-set results.
 
 ---
 
-## One-Line Pitch
+## Vision
 
-*"Proofed Protocol is the first skill verification layer for Web3 — where anyone trying to break into blockchain can prove they can actually build, not just that they watched a course."*
+A world where:
+- Skills are proven through real work
+- Credentials are verifiable by anyone
+- Opportunities are based on what you can build — not what you claim
 
 ---
-General track: https://devspot.app/projects/1510
-Built at Aleph Hackathon 2026 · GenLayer · Avalanche
+
+## Feedback & Collaboration
+
+Open to feedback, ideas, and collaborations.
+
+[General track submission](https://devspot.app/projects/1510)

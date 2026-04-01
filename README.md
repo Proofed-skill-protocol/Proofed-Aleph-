@@ -6,36 +6,16 @@
 
 ## The Problem
 
-In the age of AI, knowledge is no longer a reliable signal. Anyone can generate code, content, or answers instantly.
-But we still lack a way to verify what someone can actually build.
+In the age of AI, knowledge is no longer a reliable signal. Anyone can generate code, content, or answers instantly — but we still lack a way to verify what someone can **actually build**.
 
-Current systems rely on:
-	•	degrees
-	•	certificates
-	•	resumes
+Current systems rely on degrees, certificates, and resumes. But they don't reflect real capability.
 
-But they don’t reflect real capability.
+> **There is no reliable way to prove real skills through real work.**
+> This is not just a learning problem. It is a verification problem for the future of work.
 
-This creates a fundamental gap:
+Hundreds of thousands of people are trying to break into Web3. They find scattered YouTube videos, outdated tutorials, and courses that hand out certificates for watching content. That certificate doesn't prove they can build anything.
 
-There is no reliable way to prove real skills through real work. This is not just a learning problem.
-It is a verification problem for the future of work.
-
-⸻
-
-💡 Solution
-
-Proofed introduces a proof-of-skill layer:
-	•	users complete or submit real work
-	•	AI + decentralized consensus evaluate it
-	•	results become verifiable credentials (proof of w
-Hundreds of thousands of people are trying to break into Web3. They find scattered YouTube videos, outdated tutorials, and courses that hand out certificates for watching content.
-
-That certificate doesn't prove they can build anything.
-
-At the same time, AI can now write code. So the question is no longer "can you memorize syntax" — it's "can you actually build something real, understand what you built, and prove it."
-
-There is no tamper-proof, verifiable way to answer that question. Until now.
+At the same time, AI can now write code. The question is no longer *"can you memorize syntax"* — it's *"can you actually build something real, understand what you built, and prove it."*
 
 ---
 
@@ -54,29 +34,32 @@ The market needs hundreds of thousands of verified Web3 builders. The tools to v
 
 ---
 
-## What is Proofed Protocol?
+## Solution
 
-Proofed Protocol is a coordination layer between real work, AI evaluation, decentralized validation, and on-chain proof. Proof that you can actually build.
+Proofed introduces a **proof-of-skill layer**:
 
----
+- Users complete or submit real work
+- AI + decentralized consensus evaluate it
+- Results become verifiable, on-chain credentials
 
-## Our Value Proposition
-
-**1. Personalized learning path based on your goals**
-The user defines what they want to learn and prove. The AI builds a curated path — structured resources in the right order, matched to their track and level. 
-
-**2. A community where real progress is measured**
-Progress isn't self-reported. It's verified. Every completion, every score, every proof is on-chain — visible, comparable, and real.
-
-**3. On-chain validation of tasks and projects**
-When a user completes a task, the result is evaluated by AI, validated by decentralized consensus, and stored permanently on Avalanche. Anyone can verify it. No one can fake it.
-
-**4. Gamification centered on real learning**
-Reward pools incentivize genuine effort — not just finishing. Rewards are distributed proportionally by score. The better you actually build, the more you earn. Organizations can fund bounties for specific skills they need.
+Proofed Protocol is a coordination layer between real work, AI evaluation, decentralized validation, and on-chain proof. **Proof that you can actually build.**
 
 ---
 
-## How it works
+## Key Differentiator
+
+HackerRank tells you someone passed a test on their platform. Proofed tells the whole world — permanently, on-chain, trustlessly — that a person built something real and earned a score for it.
+
+| | Traditional Platforms | Proofed |
+|---|---|---|
+| Credential type | Course completion | Real work output |
+| Verifiability | Self-reported | On-chain, cryptographic |
+| Tamper-proof | No | Yes |
+| Economic incentive | None | Score-proportional rewards |
+
+---
+
+## How It Works
 
 ```mermaid
 flowchart TD
@@ -102,36 +85,49 @@ J --> K[Generate Certificate<br/>Shareable link]
 M --> N[View Candidate Proofs<br/>Browse verified skills]
 M --> O[Create Challenges<br/>Coming soon]
 ```
-Builder Experience
 
-Learn Mode
-	•	system evaluates your level
-	•	gives you a personalized path
-	•	you complete tasks
-	•	you receive proof of your skill
+### Builder — Learn Mode
+- System evaluates your current level
+- Gives you a personalized learning path
+- You complete real tasks
+- You receive on-chain proof of your skill
 
-Prove Mode
-	•	skip learning
-	•	submit your work (GitHub / portfolio)
-	•	get evaluated
-	•	receive proof immediately
+### Builder — Prove Mode
+> Designed for users who already have skills and need validation (e.g. job applications)
 
-👉 Designed for users who already have skills and need validation (e.g. job applications)
+- Skip the learning path
+- Submit your existing work (GitHub / portfolio)
+- Get evaluated immediately
+- Receive proof on-chain
 
-⸻
-
-🏢 Company (Preview)
-
+### Company (Preview)
 Companies can:
-	•	review candidates through verified proof of work
-	•	access real performance instead of resumes
+- Review candidates through verified proof of work
+- Access real performance data instead of resumes
 
-Future:
-	•	create challenges
-	•	evaluate candidates through Proofed
+**Coming soon:** create custom challenges and evaluate candidates directly through Proofed.
 
+---
+
+## Value Proposition
+
+**1. Personalized learning path based on your goals**
+You define what you want to learn and prove. The AI builds a curated path — structured resources in the right order, matched to your track and level.
+
+**2. A community where real progress is measured**
+Progress isn't self-reported. It's verified. Every completion, every score, every proof is on-chain — visible, comparable, and real.
+
+**3. On-chain validation of tasks and projects**
+When you complete a task, the result is evaluated by AI, validated by decentralized consensus, and stored permanently on Avalanche. Anyone can verify it. No one can fake it.
+
+**4. Gamification centered on real learning**
+Reward pools incentivize genuine effort — not just finishing. Rewards are distributed proportionally by score. The better you build, the more you earn.
+
+---
 
 ## Evaluation Rubric
+
+Every submission is scored against the same transparent rubric — visible to the user before they start. No black box.
 
 | Criteria | Weight |
 |---|---|
@@ -139,8 +135,6 @@ Future:
 | Code structure & cleanliness | 30% |
 | Responsiveness / correctness | 20% |
 | Bonus polish | 10% |
-
-Rubric is visible to the user before they start. No black box.
 
 ---
 
@@ -179,29 +173,11 @@ This creates real economic incentive to do genuine work — not just finish a co
 | Frontend | Next.js 14 · Tailwind CSS | Full product flow, leaderboard, public verification page |
 | Reward Logic | TypeScript | Proportional score-based pool distribution |
 
-API Repository: https://github.com/mauroradino/Proofed_API · Live: https://proofed-api.vercel.app
+API Repository: [Proofed_API](https://github.com/mauroradino/Proofed_API) · Live: [proofed-api.vercel.app](https://proofed-api.vercel.app)
 
 ---
 
-## Hackathon Track Alignment
-
-### ⬡ PL_Genesis
-- Submitted to Crecimiento Track in PL_Genesis Hackathon
-- AI + crypto with strong real-world use case
-- Scalable infrastructure for the Web3 talent economy
-
----
-
-## Key Differentiator
-
-HackerRank tells you someone passed a test on their platform. Proofed tells the whole world — permanently, on-chain, trustlessly — that a person built something real and earned a score for it.
-
-- Existing platforms issue certificates for completing courses
-- We issue proof for completing real work
-- The credential is cryptographically verifiable and lives forever on-chain
-
-```
-## 💰 Business Model
+## Business Model
 
 ### Revenue Streams
 
@@ -224,13 +200,16 @@ HackerRank tells you someone passed a test on their platform. Proofed tells the 
 |---|---|---|
 | Beginner / Mid | $59 | Comparable to Coursera / LinkedIn |
 | Advanced | $79 | Premium tier — higher resume value |
-```
-## Vision
 
-A world where:
-	•	skills are proven through real work
-	•	credentials are verifiable
-	•	opportunities are based on what you can build
+---
+
+## Hackathon
+
+- Submitted to the **Crecimiento Track** in [PL_Genesis Hackathon](https://devspot.app/projects/1510)
+- AI + crypto with strong real-world use case
+- Scalable infrastructure for the Web3 talent economy
+
+---
 
 ## Getting Started
 
@@ -242,20 +221,28 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open http://localhost:3000
+Open [http://localhost:3000](http://localhost:3000)
 
 ```bash
 # .env.local
 ANTHROPIC_API_KEY=sk-ant-...
 ```
 
-Without an API key the app runs in simulated mode with realistic pre-set results.
+> Without an API key the app runs in simulated mode with realistic pre-set results.
 
 ---
-🤝 Feedback
+
+## Vision
+
+A world where:
+- Skills are proven through real work
+- Credentials are verifiable by anyone
+- Opportunities are based on what you can build — not what you claim
+
+---
+
+## Feedback & Collaboration
 
 Open to feedback, ideas, and collaborations.
-:::
 
-General track: https://devspot.app/projects/1510
-
+[General track submission](https://devspot.app/projects/1510)

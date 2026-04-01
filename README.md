@@ -217,4 +217,4 @@ Without an API key the app runs in simulated mode with realistic pre-set results
 
 ---
 General track: https://devspot.app/projects/1510
-Built at Aleph Hackathon 2026 · GenLayer · Avalanche
+

@@ -85,6 +85,22 @@ J --> K[Generate Certificate<br/>Shareable link]
 M --> N[View Candidate Proofs<br/>Browse verified skills]
 M --> O[Create Challenges<br/>Coming soon]
 ```
+## Live Evaluation Example
+
+The AI evaluator reads real source code — not just the README. Here's an example output when evaluating the Proofed repo itself:
+
+**Strengths identified:**
+- `contracts/proofed.py` defines a real GenLayer smart contract with meaningful on-chain state
+- The `_evaluate` function uses `gl.nondet.web.render` to fetch GitHub repo content and constructs a structured AI prompt for rubric-based scoring
+- `src/lib/genlayer/client.ts` exists and is referenced by `Screen1Category.tsx`, indicating client-side integration with the deployed contract
+
+**Improvements flagged:**
+- `contracts/proofed.py` is truncated — critical contract methods like `submit()`, `claim_reward()`, and payout logic are missing
+- `src/app/api/evaluate/route.ts` uses `Math.random()` to generate validator scores — the on-chain GenLayer contract evaluation path is not fully wired end-to-end
+- `src/app/api/verify/route.ts` returns hardcoded scores — on-chain verification is simulated, not real
+
+> The system is transparent enough to critique its own incomplete parts — no black box.
+
 
 ### Builder — Learn Mode
 - System evaluates your current level

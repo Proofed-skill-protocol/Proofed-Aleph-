@@ -9,40 +9,70 @@ export interface EvaluationResult {
   summary: string;
 }
 
-function varyScore(base: number, delta = 5): number {
+function varyScore(base: number, delta = 4): number {
   return Math.max(50, Math.min(99, base + Math.floor(Math.random() * delta * 2) - delta));
+}
+
+async function fetchFileContent(owner: string, repo: string, path: string): Promise<string> {
+  try {
+    const res = await fetch(
+      `https://raw.githubusercontent.com/${owner}/${repo}/main/${path}`
+    );
+    if (!res.ok) return '';
+    const text = await res.text();
+    return text.slice(0, 2000); // cap per file
+  } catch {
+    return '';
+  }
 }
 
 async function fetchRepoContent(githubUrl: string): Promise<string> {
   try {
-    // Convert github.com URL to raw README
     const match = githubUrl.match(/github\.com\/([^/]+)\/([^/]+)/);
     if (!match) return '';
     const [, owner, repo] = match;
     const cleanRepo = repo.replace(/\.git$/, '');
 
-    // Fetch README
-    const readmeRes = await fetch(
-      `https://raw.githubusercontent.com/${owner}/${cleanRepo}/main/README.md`
-    );
+    const [readmeRes, repoRes, treeRes] = await Promise.all([
+      fetch(`https://raw.githubusercontent.com/${owner}/${cleanRepo}/main/README.md`),
+      fetch(`https://api.github.com/repos/${owner}/${cleanRepo}`, {
+        headers: { Accept: 'application/vnd.github.v3+json' },
+      }),
+      fetch(`https://api.github.com/repos/${owner}/${cleanRepo}/git/trees/main?recursive=1`, {
+        headers: { Accept: 'application/vnd.github.v3+json' },
+      }),
+    ]);
+
     const readme = readmeRes.ok ? await readmeRes.text() : '';
-
-    // Fetch repo info via GitHub API
-    const repoRes = await fetch(`https://api.github.com/repos/${owner}/${cleanRepo}`, {
-      headers: { 'Accept': 'application/vnd.github.v3+json' }
-    });
     const repoData = repoRes.ok ? await repoRes.json() : {};
-
-    // Fetch file tree
-    const treeRes = await fetch(
-      `https://api.github.com/repos/${owner}/${cleanRepo}/git/trees/main?recursive=1`,
-      { headers: { 'Accept': 'application/vnd.github.v3+json' } }
-    );
     const treeData = treeRes.ok ? await treeRes.json() : {};
-    const files = (treeData.tree || [])
+
+    // Filter to meaningful source files only
+    const sourceExtensions = ['.ts', '.tsx', '.js', '.jsx', '.sol', '.py', '.json'];
+    const ignoreDirs = ['node_modules', '.next', 'dist', 'build', '.git'];
+
+    const sourceFiles: string[] = (treeData.tree || [])
+      .map((f: any) => f.path as string)
+      .filter((p: string) =>
+        sourceExtensions.some(ext => p.endsWith(ext)) &&
+        !ignoreDirs.some(dir => p.includes(dir)) &&
+        !p.includes('package-lock') &&
+        !p.includes('next-env')
+      )
+      .slice(0, 10); // fetch up to 10 real files
+
+    // Fetch actual file contents in parallel
+    const fileContents = await Promise.all(
+      sourceFiles.map(async (path) => {
+        const content = await fetchFileContent(owner, cleanRepo, path);
+        return content ? `\n\n### ${path}\n\`\`\`\n${content}\n\`\`\`` : '';
+      })
+    );
+
+    const allFiles = (treeData.tree || [])
       .map((f: any) => f.path)
-      .filter((p: string) => !p.includes('node_modules'))
-      .slice(0, 60)
+      .filter((p: string) => !ignoreDirs.some(d => p.includes(d)))
+      .slice(0, 80)
       .join('\n');
 
     return `
@@ -51,12 +81,16 @@ Description: ${repoData.description || 'None'}
 Language: ${repoData.language || 'Unknown'}
 Stars: ${repoData.stargazers_count || 0}
 Topics: ${(repoData.topics || []).join(', ') || 'None'}
+Open issues: ${repoData.open_issues_count || 0}
 
 File structure:
-${files || 'Could not fetch file tree'}
+${allFiles || 'Could not fetch'}
 
-README:
-${readme ? readme.slice(0, 3000) : 'No README found'}
+README (first 2000 chars):
+${readme ? readme.slice(0, 2000) : 'No README found'}
+
+Actual source code:
+${fileContents.filter(Boolean).join('\n') || 'Could not fetch source files'}
     `.trim();
   } catch (err) {
     console.error('Failed to fetch repo content:', err);
@@ -73,42 +107,43 @@ export async function POST(req: NextRequest) {
     }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
-
-    // Fetch real repo content first
     const repoContent = await fetchRepoContent(githubUrl);
 
     let result: EvaluationResult;
 
     if (apiKey && repoContent) {
       try {
-        const prompt = `You are a strict technical evaluator for a blockchain-based Proof-of-Skill protocol.
+        const prompt = `You are a strict senior engineer evaluating GitHub repositories for a Proof-of-Skill protocol.
 
 Track/Goal: "${goal}"
 
-Here is the actual content of the submitted GitHub repository:
+Below is the actual repository content — file structure, README, and real source code files.
+
 ---
 ${repoContent}
 ---
 
-Evaluate this repository STRICTLY against the track goal: "${goal}".
+Your job: evaluate this repo ONLY based on what you can actually read above.
 
-IMPORTANT RULES:
-- If the repo has nothing to do with "${goal}", score it 20-40 max.
-- A to-do list submitted for a Web3/blockchain track should score below 35.
-- A real Web3 project with smart contracts, wallet integration, or blockchain interactions should score 70-90.
-- Be specific — reference actual files, code, and README content you can see above.
-- Do NOT give high scores to irrelevant submissions.
+SCORING RULES:
+- Base your score on the REAL CODE, not just the README claims.
+- If no relevant code exists for the goal "${goal}", score 20–40 max.
+- If the code exists but is incomplete or broken, score 40–65.
+- If the code is functional and relevant to the goal, score 65–85.
+- Only score 85+ if the code is clean, complete, well-structured, and clearly matches the goal.
+- Be specific in your feedback — reference actual file names, functions, or patterns you saw.
+- Do NOT reward good README writing if the code doesn't back it up.
 
-Respond ONLY with valid JSON (no markdown, no extra text):
+Weights: task_requirements=40%, code_structure=30%, correctness=20%, polish=10%.
+
+Respond ONLY with valid JSON, no markdown, no extra text:
 {
   "score": <weighted average 0-100>,
   "breakdown": [<task_requirements 0-100>, <code_structure 0-100>, <correctness 0-100>, <polish 0-100>],
-  "strengths": ["<specific thing you saw in the repo>", "<another specific thing>", "<another>"],
-  "improvements": ["<specific improvement needed>", "<another>", "<another>"],
-  "summary": "<one sentence, specific to what you actually saw in this repo>"
-}
-
-Weights: task_requirements=40%, code_structure=30%, correctness=20%, polish=10%.`;
+  "strengths": ["<specific strength referencing actual code/files>", "<another>", "<another>"],
+  "improvements": ["<specific improvement with file or function reference>", "<another>", "<another>"],
+  "summary": "<2 sentences max, specific to what you actually read in the code>"
+}`;
 
         const response = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
@@ -118,7 +153,7 @@ Weights: task_requirements=40%, code_structure=30%, correctness=20%, polish=10%.
             'anthropic-version': '2023-06-01',
           },
           body: JSON.stringify({
-            model: 'claude-haiku-4-5-20251001',
+            model: 'claude-sonnet-4-6', // upgraded from haiku
             max_tokens: 1000,
             messages: [{ role: 'user', content: prompt }],
           }),
@@ -126,13 +161,8 @@ Weights: task_requirements=40%, code_structure=30%, correctness=20%, polish=10%.
 
         const data = await response.json();
 
-        if (
-          !data?.content ||
-          !Array.isArray(data.content) ||
-          data.content.length === 0 ||
-          !data.content[0].text
-        ) {
-          console.log('Unexpected Claude response:', JSON.stringify(data));
+        if (!data?.content?.[0]?.text) {
+          console.error('Unexpected Claude response:', JSON.stringify(data));
           throw new Error('Bad Claude response shape');
         }
 
@@ -141,27 +171,32 @@ Weights: task_requirements=40%, code_structure=30%, correctness=20%, polish=10%.
 
       } catch (apiErr) {
         console.error('Claude API failed:', apiErr);
-        // Fallback: low score for unknown repo
         result = {
           score: 45,
           breakdown: [40, 50, 45, 40],
           strengths: ['Repository is accessible', 'Has some structure'],
-          improvements: ['Does not match the selected track goal', 'No relevant technology found', 'README does not describe required skills'],
+          improvements: [
+            'Does not clearly match the selected track goal',
+            'No relevant technology detected',
+            'README does not describe required skills',
+          ],
           summary: 'Submission does not appear to match the selected track — please submit a relevant project.',
         };
       }
     } else {
-      // No API key or no repo content
       result = {
         score: 40,
         breakdown: [35, 45, 40, 35],
         strengths: ['Repository exists and is public'],
-        improvements: ['Could not evaluate — ensure repo is public', 'Add a detailed README', 'Make sure your project matches the track'],
-        summary: 'Could not fully evaluate this submission — check that the repo is public and has content.',
+        improvements: [
+          'Could not evaluate — ensure repo is public',
+          'Add a detailed README',
+          'Make sure your project matches the track',
+        ],
+        summary: 'Could not fully evaluate — check that the repo is public and has content.',
       };
     }
 
-    // Validator scores vary slightly around the base score
     const validators = [
       { id: 'VALIDATOR-01', score: varyScore(result.score) },
       { id: 'VALIDATOR-02', score: varyScore(result.score) },

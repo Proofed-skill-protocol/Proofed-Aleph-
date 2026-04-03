@@ -102,6 +102,8 @@ The AI evaluator reads real source code — not just the README. Here's an examp
 > The system is transparent enough to critique its own incomplete parts — no black box.
 
 
+
+
 ### Builder — Learn Mode
 - System evaluates your current level
 - Gives you a personalized learning path

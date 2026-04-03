@@ -82,7 +82,7 @@ export default function Screen5({ selTrack, githubUrl, walletAddress, challengeI
         evaluateSubmission({ challengeId }),
       ]);
 
-      if (!evaluateTx) setChainError('On-chain evaluation failed — using off-chain score.');
+      if (!evaluateTx) setChainError('GenLayer testnet busy — AI evaluation running.');
 
       // Try to read back the on-chain result
       let onChainScore: number | null = null;

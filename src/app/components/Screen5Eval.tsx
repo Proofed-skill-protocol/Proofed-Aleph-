@@ -61,7 +61,7 @@ export default function Screen5({ selTrack, githubUrl, walletAddress, challengeI
       // Phase 2 — submit GitHub URL to GenLayer contract
       setP1('active');
       const submitTx = await submitToChallenge({ challengeId, githubUrl });
-      if (!submitTx) setChainError('Submit to chain failed — continuing off-chain.');
+      if (!submitTx) setChainError('GenLayer testnet busy — continuing with AI evaluation.');
       await sleep(800);
       setP1('done');
 

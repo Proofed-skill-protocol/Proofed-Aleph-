@@ -223,9 +223,9 @@ API Repository: [Proofed_API](https://github.com/mauroradino/Proofed_API)
 
 ## Hackathon
 
-- Submitted to the **Crecimiento Track** in [PL_Genesis Hackathon](https://devspot.app/projects/1510)
 - AI + crypto with strong real-world use case
 - Scalable infrastructure for the Web3 talent economy
+- Future of work
 
 ---
 

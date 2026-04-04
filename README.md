@@ -1,7 +1,9 @@
 # ⬡ Proofed Protocol
 
 > The verification layer for the Web3 talent economy.
-Product: https://proofed-aleph-uv26.vercel.app/ 
+
+🌐 [Live Product](https://proofed-aleph-uv26.vercel.app) · [Hackathon Submission](https://devspot.app/projects/1510)
+
 ---
 
 ## The Problem
@@ -60,7 +62,6 @@ HackerRank tells you someone passed a test on their platform. Proofed tells the 
 ---
 
 ## How It Works
-
 ```mermaid
 flowchart TD
 A[Enter Proofed] --> B{Builder or Company?}
@@ -85,24 +86,6 @@ J --> K[Generate Certificate<br/>Shareable link]
 M --> N[View Candidate Proofs<br/>Browse verified skills]
 M --> O[Create Challenges<br/>Coming soon]
 ```
-## Live Evaluation Example
-
-The AI evaluator reads real source code — not just the README. Here's an example output when evaluating the Proofed repo itself:
-
-**Strengths identified:**
-- `contracts/proofed.py` defines a real GenLayer smart contract with meaningful on-chain state
-- The `_evaluate` function uses `gl.nondet.web.render` to fetch GitHub repo content and constructs a structured AI prompt for rubric-based scoring
-- `src/lib/genlayer/client.ts` exists and is referenced by `Screen1Category.tsx`, indicating client-side integration with the deployed contract
-
-**Improvements flagged:**
-- `contracts/proofed.py` is truncated — critical contract methods like `submit()`, `claim_reward()`, and payout logic are missing
-- `src/app/api/evaluate/route.ts` uses `Math.random()` to generate validator scores — the on-chain GenLayer contract evaluation path is not fully wired end-to-end
-- `src/app/api/verify/route.ts` returns hardcoded scores — on-chain verification is simulated, not real
-
-> The system is transparent enough to critique its own incomplete parts — no black box.
-
-
-
 
 ### Builder — Learn Mode
 - System evaluates your current level
@@ -124,6 +107,24 @@ Companies can:
 - Access real performance data instead of resumes
 
 **Coming soon:** create custom challenges and evaluate candidates directly through Proofed.
+
+---
+
+## Live Evaluation Example
+
+The AI evaluator reads real source code — not just the README. Here's an actual output when evaluating the Proofed repo against the Smart Contracts track:
+
+**Strengths identified:**
+- `contracts/proofed.py` defines a meaningful smart contract structure using GenLayer with Challenge/Submission dataclasses, reputation tracking via TreeMap, and PASS_THRESHOLD/PROTOCOL_FEE_BPS constants
+- The `_evaluate` method demonstrates intent to use AI-based evaluation via `gl.nondet.web.render` and a structured LLM prompt against a rubric — a core protocol requirement
+- `src/lib/genlayer/client.ts` exists and is referenced in `Screen1Category.tsx` via `getAllChallenges()`, suggesting client-side integration with the deployed contract
+
+**Improvements flagged:**
+- `contracts/proofed.py` is truncated — critical contract methods like `submit_work()`, `claim_reward()`, and payout logic are not shown
+- `src/app/api/evaluate/route.ts` uses random score variation and never actually calls the GenLayer contract — evaluation is centralized, contradicting the on-chain verification claim
+- `src/app/api/verify/route.ts` returns hardcoded mock data rather than actual on-chain state reads
+
+> The system is transparent enough to critique its own incomplete parts — no black box.
 
 ---
 
@@ -159,7 +160,6 @@ Every submission is scored against the same transparent rubric — visible to th
 ## Reward Pool
 
 Organizations or users fund skill bounties. Participants optionally enter ($2 or $5 USDC). Rewards are distributed proportionally by score — the better you build, the more you earn.
-
 ```js
 const total = scores.reduce((a, b) => a + b, 0);
 const rewards = scores.map(score => (score / total) * pool);
@@ -191,7 +191,7 @@ This creates real economic incentive to do genuine work — not just finish a co
 | Frontend | Next.js 14 · Tailwind CSS | Full product flow, leaderboard, public verification page |
 | Reward Logic | TypeScript | Proportional score-based pool distribution |
 
-API Repository: [Proofed_API](https://github.com/mauroradino/Proofed_API) · Live: [proofed-api.vercel.app](https://proofed-api.vercel.app)
+API Repository: [Proofed_API](https://github.com/mauroradino/Proofed_API)
 
 ---
 
@@ -230,7 +230,6 @@ API Repository: [Proofed_API](https://github.com/mauroradino/Proofed_API) · Liv
 ---
 
 ## Getting Started
-
 ```bash
 git clone https://github.com/Proofed-skill-protocol/Proofed-Aleph-
 cd Proofed-Aleph-
@@ -240,7 +239,6 @@ npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000)
-
 ```bash
 # .env.local
 ANTHROPIC_API_KEY=sk-ant-...
@@ -262,5 +260,3 @@ A world where:
 ## Feedback & Collaboration
 
 Open to feedback, ideas, and collaborations.
-
-[General track submission](https://devspot.app/projects/1510)

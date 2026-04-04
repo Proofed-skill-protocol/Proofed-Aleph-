@@ -2,8 +2,7 @@
 
 > The verification layer for the Web3 talent economy.
 
-🌐 [Live Product](https://proofed-aleph-uv26.vercel.app) · [Hackathon Submission](https://devspot.app/projects/1510)
-
+🌐 [Live Product](https://proofed-aleph-uv26.vercel.app) 
 ---
 
 ## The Problem

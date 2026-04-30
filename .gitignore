@@ -1,7 +1,10 @@
-node_modules
-
 # Python
 __pycache__/
 *.py[cod]
 .venv/
 .env.local
+# new additions
+.next/
+.env
+.env.local
+node_modules/

@@ -28,7 +28,7 @@ class Submission:
     submitter: str      # address as hex string
     github_url: str
     has_evaluated: bool
-    score: u32          # 0–100 after evaluation
+    score: int          # FIX #4: was u32 — plain int avoids float-cast panic
     feedback: str
     passed: bool
     reward_claimed: bool
@@ -47,27 +47,55 @@ class ProofOfSkill(gl.Contract):
         pass
 
     # ------------------------------------------------------------------ #
+    # Internal helpers                                                     #
+    # ------------------------------------------------------------------ #
+
+    @staticmethod
+    def _github_to_readme_url(github_url: str) -> str:
+        """
+        FIX #2: Convert a GitHub repo URL to its raw README URL.
+        GitHub repo pages render as a React SPA — gl.nondet.web.render()
+        gets navigation boilerplate, not actual code content.
+        Fetching the raw README gives validators real content to evaluate.
+
+        https://github.com/user/repo  ->
+        https://raw.githubusercontent.com/user/repo/main/README.md
+        """
+        url = github_url.rstrip("/")
+        raw = url.replace("https://github.com/", "https://raw.githubusercontent.com/")
+        return raw + "/main/README.md"
+
+    # ------------------------------------------------------------------ #
     # Internal: AI evaluates a GitHub submission against a rubric         #
     # ------------------------------------------------------------------ #
-    def _evaluate(
-        self, github_url: str, task_title: str, rubric: str
-    ) -> dict:
-        def get_result() -> str:
-            page_content = gl.nondet.web.render(github_url, mode="text")
+    def _evaluate(self, github_url: str, task_title: str, rubric: str) -> dict:
 
-            prompt = f"""
-You are an expert technical evaluator for a Proof-of-Skill protocol.
+        # FIX #2: use raw README URL so validators read actual repo content
+        readme_url = self._github_to_readme_url(github_url)
+
+        def get_result() -> str:
+            # Fetch the README — this is where the real submission content lives
+            page_content = gl.nondet.web.render(readme_url, mode="text")
+
+            # Fallback message so the LLM still scores rather than errors
+            if not page_content or len(page_content.strip()) < 50:
+                page_content = (
+                    "[README not accessible or empty. "
+                    "Score based on URL pattern and available signals only.]"
+                )
+
+            prompt = f"""You are an expert technical evaluator for a Proof-of-Skill protocol.
 
 Task Title: {task_title}
 Evaluation Rubric:
 {rubric}
 
-Candidate's submitted GitHub repository page:
+Candidate's submitted GitHub repository README:
 {page_content}
 
 Evaluate the submission strictly against the rubric above.
 
-Respond ONLY with this exact JSON format, no other text:
+Respond ONLY with this exact JSON format — no markdown, no code fences, no explanation outside the JSON:
 {{
     "score": <integer from 0 to 100>,
     "passed": <true if score >= {PASS_THRESHOLD}, otherwise false>,
@@ -77,13 +105,28 @@ Respond ONLY with this exact JSON format, no other text:
 }}
 
 Rules:
-- Score 0-100 based purely on the rubric.
-- passed must equal (score >= {PASS_THRESHOLD}).
-- Output must be valid JSON only. No markdown, no explanation outside the JSON.
+- Score must be an integer 0-100 based purely on the rubric.
+- passed must equal true if and only if score >= {PASS_THRESHOLD}.
+- Output must be valid JSON only. No markdown. No text before or after the JSON object.
 """
-            result = gl.nondet.exec_prompt(prompt, response_format="json")
-            return json.dumps(result, sort_keys=True)
+            # FIX #1: do NOT use response_format="json"
+            # That returns a Python dict, whose serialization can differ
+            # across validators (float precision, key order edge cases).
+            # Instead: get the raw string, strip any markdown fences the
+            # LLM occasionally adds, parse it, then re-serialize with
+            # sort_keys=True so every validator produces an identical string.
+            raw_str = gl.nondet.exec_prompt(prompt)
+            clean = (
+                raw_str.strip()
+                .removeprefix("```json")
+                .removeprefix("```")
+                .removesuffix("```")
+                .strip()
+            )
+            return json.dumps(json.loads(clean), sort_keys=True)
 
+        # This is what makes the three validators reach consensus:
+        # each runs get_result() independently and compares the JSON strings.
         result_json = json.loads(gl.eq_principle.strict_eq(get_result))
         return result_json
 
@@ -99,9 +142,9 @@ Rules:
         rubric: str,
     ) -> None:
         if challenge_id in self.challenges:
-            gl.vm.UserError("Challenge ID already exists")
+            raise gl.vm.UserError("Challenge ID already exists")  # FIX #3: must raise
 
-        deposited = gl.message.value  # native token sent with the transaction
+        deposited = gl.message.value
 
         self.challenges[challenge_id] = Challenge(
             id=challenge_id,
@@ -119,12 +162,12 @@ Rules:
     @gl.public.write
     def fund_challenge(self, challenge_id: str) -> None:
         if challenge_id not in self.challenges:
-            gl.vm.UserError("Challenge not found")
+            raise gl.vm.UserError("Challenge not found")  # FIX #3
 
         challenge = self.challenges[challenge_id]
 
         if not challenge.is_open:
-            gl.vm.UserError("Challenge is closed")
+            raise gl.vm.UserError("Challenge is closed")  # FIX #3
 
         challenge.pool_amount += gl.message.value
 
@@ -134,15 +177,20 @@ Rules:
     @gl.public.write
     def submit(self, challenge_id: str, github_url: str) -> None:
         if challenge_id not in self.challenges:
-            gl.vm.UserError("Challenge not found")
+            raise gl.vm.UserError("Challenge not found")  # FIX #3
 
         if not self.challenges[challenge_id].is_open:
-            gl.vm.UserError("Challenge is closed")
+            raise gl.vm.UserError("Challenge is closed")  # FIX #3
 
         sender_hex = gl.message.sender_address.as_hex
 
-        if challenge_id in self.submissions and sender_hex in self.submissions[challenge_id]:
-            gl.vm.UserError("You already have a submission for this challenge")
+        if (
+            challenge_id in self.submissions
+            and sender_hex in self.submissions[challenge_id]
+        ):
+            raise gl.vm.UserError(  # FIX #3
+                "You already have a submission for this challenge"
+            )
 
         submission_id = f"{challenge_id}_{sender_hex}"
 
@@ -157,7 +205,13 @@ Rules:
             passed=False,
             reward_claimed=False,
         )
-        self.submissions.get_or_insert_default(challenge_id)[sender_hex] = submission
+
+        # FIX #5: explicit check instead of get_or_insert_default
+        # get_or_insert_default() can throw if the inner TreeMap has no
+        # registered default factory in some SDK versions.
+        if challenge_id not in self.submissions:
+            self.submissions[challenge_id] = TreeMap()
+        self.submissions[challenge_id][sender_hex] = submission
 
     # ------------------------------------------------------------------ #
     # Write: evaluate your own submission (calls the AI)                  #
@@ -166,38 +220,42 @@ Rules:
     def evaluate(self, challenge_id: str) -> None:
         sender_hex = gl.message.sender_address.as_hex
 
-        if challenge_id not in self.submissions or sender_hex not in self.submissions[challenge_id]:
-            gl.vm.UserError("Submission not found")
+        if (
+            challenge_id not in self.submissions
+            or sender_hex not in self.submissions[challenge_id]
+        ):
+            raise gl.vm.UserError("Submission not found")  # FIX #3
 
         sub = self.submissions[challenge_id][sender_hex]
 
         if sub.has_evaluated:
-            gl.vm.UserError("Already evaluated")
+            raise gl.vm.UserError("Already evaluated")  # FIX #3
 
         challenge = self.challenges[challenge_id]
         result = self._evaluate(sub.github_url, challenge.title, challenge.rubric)
 
         sub.has_evaluated = True
-        sub.score = u32(int(result["score"]))
+
+        # FIX #4: plain int() — avoids panic if LLM returns 85.0 instead of 85
+        sub.score = int(result["score"])
         sub.passed = bool(result["passed"])
 
-        # Store full feedback as JSON string for the frontend to parse
         sub.feedback = json.dumps({
             "strengths": result.get("strengths", ""),
             "improvements": result.get("improvements", ""),
             "category_breakdown": result.get("category_breakdown", ""),
         })
 
-        # Update on-chain reputation regardless of pass/fail
+        # FIX #4: use plain int arithmetic, let storage layer handle u256 typing
         sender_addr = gl.message.sender_address
-        if sender_addr not in self.reputation:
-            self.reputation[sender_addr] = 0
-        self.reputation[sender_addr] += u256(int(sub.score))
+        self.reputation[sender_addr] = (
+            int(self.reputation.get(sender_addr, 0)) + int(sub.score)
+        )
 
         if sub.passed:
-            if sender_addr not in self.pass_count:
-                self.pass_count[sender_addr] = 0
-            self.pass_count[sender_addr] += 1
+            self.pass_count[sender_addr] = (
+                int(self.pass_count.get(sender_addr, 0)) + 1
+            )
 
     # ------------------------------------------------------------------ #
     # Write: creator closes challenge to new submissions                  #
@@ -205,64 +263,63 @@ Rules:
     @gl.public.write
     def close_challenge(self, challenge_id: str) -> None:
         if challenge_id not in self.challenges:
-            gl.vm.UserError("Challenge not found")
+            raise gl.vm.UserError("Challenge not found")  # FIX #3
 
         challenge = self.challenges[challenge_id]
 
         if challenge.creator != gl.message.sender_address.as_hex:
-            gl.vm.UserError("Only the creator can close this challenge")
+            raise gl.vm.UserError("Only the creator can close this challenge")  # FIX #3
 
         challenge.is_open = False
 
     # ------------------------------------------------------------------ #
     # Write: a passing submitter claims their proportional reward         #
-    #                                                                     #
-    # Payout formula (from the doc):                                      #
-    #   each winner's share = (their_score / sum_of_all_passing_scores)   #
-    #   payout = share * (pool_amount * (1 - protocol_fee))               #
     # ------------------------------------------------------------------ #
     @gl.public.write
     def claim_reward(self, challenge_id: str) -> None:
         sender_hex = gl.message.sender_address.as_hex
 
-        if challenge_id not in self.submissions or sender_hex not in self.submissions[challenge_id]:
-            gl.vm.UserError("Submission not found")
+        if (
+            challenge_id not in self.submissions
+            or sender_hex not in self.submissions[challenge_id]
+        ):
+            raise gl.vm.UserError("Submission not found")  # FIX #3
 
         sub = self.submissions[challenge_id][sender_hex]
 
         if not sub.has_evaluated:
-            gl.vm.UserError("Submission not yet evaluated")
+            raise gl.vm.UserError("Submission not yet evaluated")  # FIX #3
 
         if not sub.passed:
-            gl.vm.UserError("Submission did not pass — not eligible for reward")
+            raise gl.vm.UserError(  # FIX #3
+                "Submission did not pass — not eligible for reward"
+            )
 
         if sub.reward_claimed:
-            gl.vm.UserError("Reward already claimed")
+            raise gl.vm.UserError("Reward already claimed")  # FIX #3
 
         challenge = self.challenges[challenge_id]
 
         if challenge.is_open:
-            gl.vm.UserError("Challenge must be closed before claiming rewards")
+            raise gl.vm.UserError(  # FIX #3
+                "Challenge must be closed before claiming rewards"
+            )
 
-        # Sum scores of all passing, evaluated submissions for this challenge
         total_passing_score = 0
         for submitter_hex, s in self.submissions[challenge_id].items():
             if s.has_evaluated and s.passed:
                 total_passing_score += int(s.score)
 
         if total_passing_score == 0:
-            gl.vm.UserError("No valid scores to calculate payout")
+            raise gl.vm.UserError("No valid scores to calculate payout")  # FIX #3
 
-        # Apply 10% protocol fee
         pool = int(challenge.pool_amount)
         fee = pool * PROTOCOL_FEE_BPS // 100
         distributable = pool - fee
 
-        # Proportional payout
         payout = distributable * int(sub.score) // total_passing_score
 
         sub.reward_claimed = True
-
         gl.message.sender_address.transfer(payout)
 
     # ------------------------------------------------------------------ #
@@ -271,7 +328,7 @@ Rules:
     @gl.public.view
     def get_challenge(self, challenge_id: str) -> dict:
         if challenge_id not in self.challenges:
-            gl.vm.UserError("Challenge not found")
+            raise gl.vm.UserError("Challenge not found")  # FIX #3
         c = self.challenges[challenge_id]
         return {
             "id": c.id,
@@ -298,10 +355,10 @@ Rules:
     @gl.public.view
     def get_submission(self, challenge_id: str, submitter_address: str) -> dict:
         if challenge_id not in self.submissions:
-            gl.vm.UserError("No submissions for this challenge")
+            raise gl.vm.UserError("No submissions for this challenge")  # FIX #3
         submitter_hex = Address(submitter_address).as_hex
         if submitter_hex not in self.submissions[challenge_id]:
-            gl.vm.UserError("Submission not found")
+            raise gl.vm.UserError("Submission not found")  # FIX #3
         s = self.submissions[challenge_id][submitter_hex]
         return {
             "challenge_id": s.challenge_id,
@@ -346,6 +403,5 @@ Rules:
                 "cumulative_score": int(score),
                 "challenges_passed": int(self.pass_count.get(addr, 0)),
             })
-        # Sort descending by cumulative score
         entries.sort(key=lambda x: x["cumulative_score"], reverse=True)
         return entries

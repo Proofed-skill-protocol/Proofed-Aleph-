@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getAllChallenges, type Challenge } from '@/lib/genlayer/client';
+import { getAllChallenges, type Challenge } from '@/lib/proofedApi';
 import { CATEGORIES } from '../../lib/data';
 
 interface Screen1Props {

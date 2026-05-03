@@ -33,9 +33,9 @@ export default function CompanyPreview() {
   ];
 
   const features = [
-    { ico: '⬡', title: 'On-chain verified',       desc: 'Every proof is stored on GenLayer — impossible to fake' },
-    { ico: '◈', title: 'Real work, not resumes',  desc: 'Candidates prove skills by building actual projects'    },
-    { ico: '⚡', title: 'Instant verification',    desc: 'One link. No back-and-forth. No interviews needed'      },
+    { icon: '⬡', title: 'On-chain verified',       desc: 'Every proof is stored on GenLayer — impossible to fake' },
+    { icon: '◈', title: 'Real work, not resumes',  desc: 'Candidates prove skills by building actual projects'    },
+    { icon: '⚡', title: 'Instant verification',    desc: 'One link. No back-and-forth. No interviews needed'      },
   ];
 
   return (
@@ -44,7 +44,7 @@ export default function CompanyPreview() {
       <div className="company-features">
         {features.map((f, i) => (
           <div key={i} className="cfeat">
-            <div className="cfeat-ico">{f.ico}</div>
+            <div className="cfeat-ico">{f.icon}</div>
             <div className="cfeat-text">
               <div className="cfeat-title">{f.title}</div>
               <div className="cfeat-desc">{f.desc}</div>
@@ -65,7 +65,7 @@ export default function CompanyPreview() {
               <div className="cp-step-num">{s.num}</div>
               <div className="cp-step-body">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-                  <span style={{ fontSize: '1rem' }}>{s.ico}</span>
+                  <span style={{ fontSize: '1rem' }}>{s.icon}</span>
                   <span className="cp-step-title">{s.title}</span>
                   <span className="cp-tag" style={{ borderColor: `${s.tagColor}55`, color: s.tagColor }}>
                     {s.tag}

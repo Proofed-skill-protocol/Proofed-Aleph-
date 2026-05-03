@@ -3,7 +3,6 @@
 import { useState, useCallback } from 'react';
 import { useAppState } from '@/lib/useAppState';
 import { TrackKey } from '@/lib/data';
-import type { Challenge } from '@/lib/genlayer/client';
 
 import Topbar             from './components/Topbar';
 import StepBar            from './components/StepBar';
@@ -20,6 +19,7 @@ import ScreenAdaptivePath from './components/ScreenAdaptivePath';
 import CompanyPreview from './components/CompanyPreview';
 import ScreenCourse     from './components/ScreenCourse';
 import ScreenProveIntro from './components/ScreenProveIntro';
+import type { Challenge } from '@/lib/proofedApi';
 
 type AppMode = 'hero' | 'builder' | 'company';
 type BuilderStep =
@@ -61,7 +61,7 @@ const COMING_SOON: Record<string, { title: string; items: string[] }> = {
 export default function Home() {
   const {
     state, goTo, pickCat, pickTrack, markStepDone,
-    selectPool, setGithubUrl, setWalletAddress,
+    selectPool, setGithubUrl,
     restart, isFormValid, allStepsDone,
   } = useAppState();
 
@@ -445,11 +445,9 @@ if (appMode === 'builder' && builderStep === 'proveintro') {
           <Screen4Submit
             poolEntry={state.poolEntry}
             githubUrl={state.githubUrl}
-            walletAddress={state.walletAddress}
             isFormValid={isFormValid}
             onSelectPool={selectPool}
             onGithubChange={setGithubUrl}
-            onWalletChange={setWalletAddress}
             onSubmit={() => goTo(5)}
             onBack={() => builderStep === 'adaptive' ? setBuilderStep('adaptive') : goTo(3)}
           />
@@ -458,7 +456,6 @@ if (appMode === 'builder' && builderStep === 'proveintro') {
           <Screen5Eval
             selTrack={state.selTrack}
             githubUrl={state.githubUrl}
-            walletAddress={state.walletAddress}
             challengeId={selectedChallenge?.id ?? 'default'}
             onDone={(result) => {
               setEvalResult(result);
@@ -470,7 +467,6 @@ if (appMode === 'builder' && builderStep === 'proveintro') {
         {state.step === 6 && state.selTrack && (
           <Screen6Results
             selTrack={state.selTrack}
-            walletAddress={state.walletAddress}
             poolEntry={state.poolEntry}
             evalResult={evalResult}
             onRestart={fullReset}

@@ -13,7 +13,6 @@ export interface AppState {
   doneSteps: Set<number>;
   totalResources: number;
   githubUrl: string;
-  walletAddress: string;
 }
 
 const initialState: AppState = {
@@ -24,7 +23,6 @@ const initialState: AppState = {
   doneSteps: new Set(),
   totalResources: 0,
   githubUrl: '',
-  walletAddress: '',
 };
 
 export function useAppState() {
@@ -64,18 +62,12 @@ export function useAppState() {
     setState(s => ({ ...s, githubUrl: url }));
   };
 
-  const setWalletAddress = (addr: string) => {
-    setState(s => ({ ...s, walletAddress: addr }));
-  };
-
   const restart = () => {
     setState(initialState);
   };
 
   const isFormValid =
-    state.githubUrl.includes('github.com') &&
-    state.walletAddress.startsWith('0x') &&
-    state.walletAddress.length >= 10;
+    state.githubUrl.includes('github.com');
 
   const allStepsDone =
     state.totalResources > 0 && state.doneSteps.size >= state.totalResources;
@@ -88,7 +80,6 @@ export function useAppState() {
     markStepDone,
     selectPool,
     setGithubUrl,
-    setWalletAddress,
     restart,
     isFormValid,
     allStepsDone,

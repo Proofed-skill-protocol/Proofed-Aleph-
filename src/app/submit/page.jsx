@@ -1,18 +1,23 @@
 'use client';
 import { useState } from 'react';
+import { useAccount, useConnect, useDisconnect } from 'wagmi';
+import { injected } from 'wagmi/connectors';
 import { submitAndEvaluate, pollForResult } from '@/lib/proofedApi';
 
 export default function SubmitPage() {
-  const [githubUrl, setGithubUrl]       = useState('');
-  const [challengeId, setChallengeId]   = useState('challenge_web3_frontend_1');
-  const [walletAddress, setWalletAddress] = useState('');
-  const [status, setStatus]             = useState(null);
-  const [progress, setProgress]         = useState(null);
-  const [result, setResult]             = useState(null);
-  const [error, setError]               = useState(null);
+  const [githubUrl, setGithubUrl]     = useState('');
+  const [challengeId, setChallengeId] = useState('challenge_web3_frontend_1');
+  const [status, setStatus]           = useState(null);
+  const [progress, setProgress]       = useState(null);
+  const [result, setResult]           = useState(null);
+  const [error, setError]             = useState(null);
+
+  const { address, isConnected } = useAccount();
+  const { connect } = useConnect();
+  const { disconnect } = useDisconnect();
 
   async function handleSubmit() {
-    if (!githubUrl || !walletAddress) return;
+    if (!githubUrl || !isConnected) return;
     setStatus('submitting');
     setError(null);
     setResult(null);
@@ -23,7 +28,7 @@ export default function SubmitPage() {
       setStatus('polling');
       const verdict = await pollForResult(
         challengeId,
-        walletAddress,
+        address,
         (attempt, max) => setProgress(`Waiting for consensus... (${attempt}/${max})`)
       );
 
@@ -40,7 +45,6 @@ export default function SubmitPage() {
     alert('Claim reward coming soon!');
   }
 
-  // Parse feedback — contract stores it as a JSON string
   const feedback = (() => {
     if (!result?.feedback) return null;
     if (typeof result.feedback === 'object') return result.feedback;
@@ -84,19 +88,32 @@ export default function SubmitPage() {
             />
           </div>
 
+          {/* Wallet connect */}
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Wallet Address</label>
-            <input
-              className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-zinc-400"
-              placeholder="0x..."
-              value={walletAddress}
-              onChange={e => setWalletAddress(e.target.value)}
-            />
+            <label className="block text-sm text-gray-400 mb-1">Wallet</label>
+            {isConnected ? (
+              <div className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-sm flex items-center justify-between">
+                <span className="font-mono text-zinc-200">{address}</span>
+                <button
+                  onClick={() => disconnect()}
+                  className="text-xs text-zinc-500 hover:text-white ml-4"
+                >
+                  Disconnect
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => connect({ connector: injected() })}
+                className="w-full bg-zinc-900 border border-zinc-700 rounded-lg px-4 py-3 text-sm text-zinc-400 hover:text-white hover:border-zinc-400 transition text-left"
+              >
+                Connect Wallet (MetaMask)
+              </button>
+            )}
           </div>
 
           <button
             onClick={handleSubmit}
-            disabled={isLoading || !githubUrl || !walletAddress}
+            disabled={isLoading || !githubUrl || !isConnected}
             className="w-full bg-white text-black font-semibold rounded-lg px-4 py-3 text-sm hover:bg-zinc-200 transition disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {status === 'submitting' ? 'Submitting to blockchain...' :
@@ -143,7 +160,6 @@ export default function SubmitPage() {
 
             <div className="px-6 py-5 space-y-5">
 
-              {/* Feedback sections */}
               {feedback && (
                 <>
                   <div>
@@ -194,6 +210,7 @@ export default function SubmitPage() {
                   <p className="text-sm text-emerald-400 font-medium">🏆 Reward already claimed</p>
                 </div>
               )}
+
             </div>
           </div>
         )}

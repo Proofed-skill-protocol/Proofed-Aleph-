@@ -1,16 +1,15 @@
 'use client';
-
+import { useAccount } from 'wagmi';
 import { useEffect, useState } from 'react';
 import { PATHS, TrackKey } from '@/lib/data';
 import { sleep } from '@/lib/utils';
 import { getInstruction, checkRepo } from '@/lib/api';
-import { submitToChallenge, evaluateSubmission, getSubmission, parseFeedback } from '@/lib/genlayer/client';
 import GenLayerAnim, { GenLayerAnimState } from './GenLayerAnim';
+import { submitToChallenge, evaluateSubmission, getSubmission, parseFeedback } from '@/lib/proofedApi';
 
 interface Screen5Props {
   selTrack:    TrackKey;
   githubUrl:   string;
-  walletAddress: string;
   challengeId: string;
   onDone:      (result: any) => void;
 }
@@ -21,15 +20,18 @@ const defaultValidators: GenLayerAnimState['validators'] = [
   { status: 'STANDBY', score: null, state: '' },
 ];
 
-export default function Screen5({ selTrack, githubUrl, walletAddress, challengeId, onDone }: Screen5Props) {
+export default function Screen5({ selTrack, githubUrl, challengeId, onDone }: Screen5Props) {
   const [p0, setP0] = useState<'' | 'active' | 'done'>('');
   const [p1, setP1] = useState<'' | 'active' | 'done'>('');
   const [p2, setP2] = useState<'' | 'active' | 'done'>('');
-  const [showGl,   setShowGl]   = useState(false);
-  const [showSpin, setShowSpin] = useState(true);
+  const [showGl,    setShowGl]    = useState(false);
+  const [showSpin,  setShowSpin]  = useState(true);
   const [pipeStates, setPipeStates] = useState<{ p2: '' | 'active' | 'done'; p3: '' | 'active' | 'done' }>({ p2: '', p3: '' });
   const [apiError,   setApiError]   = useState<string | null>(null);
   const [chainError, setChainError] = useState<string | null>(null);
+
+  const account = useAccount();
+  const address = account.address ?? '';
 
   const [glAnim, setGlAnim] = useState<GenLayerAnimState>({
     pillStep: 0,
@@ -60,7 +62,7 @@ export default function Screen5({ selTrack, githubUrl, walletAddress, challengeI
 
       // Phase 2 — submit GitHub URL to GenLayer contract
       setP1('active');
-      const submitTx = await submitToChallenge({ challengeId, githubUrl });
+      const submitTx = await submitToChallenge(challengeId, githubUrl, address);
       if (!submitTx) setChainError('GenLayer testnet busy — continuing with AI evaluation.');
       await sleep(800);
       setP1('done');
@@ -79,7 +81,7 @@ export default function Screen5({ selTrack, githubUrl, walletAddress, challengeI
       // Fire both in parallel — on-chain AI eval + off-chain Claude
       const [apiResult, evaluateTx] = await Promise.all([
         apiPromise,
-        evaluateSubmission({ challengeId }),
+        evaluateSubmission(challengeId, address),
       ]);
 
       if (!evaluateTx) setChainError('GenLayer testnet busy — AI evaluation running.');
@@ -87,9 +89,9 @@ export default function Screen5({ selTrack, githubUrl, walletAddress, challengeI
       // Try to read back the on-chain result
       let onChainScore: number | null = null;
       let onChainFeedback: any = null;
-      if (evaluateTx && walletAddress) {
+      if (evaluateTx && address) {
         await sleep(2000);
-        const sub = await getSubmission({ challengeId, submitterAddress: walletAddress });
+        const sub = await getSubmission({ challengeId, submitterAddress: address });
         if (sub?.has_evaluated) {
           onChainScore    = sub.score;
           onChainFeedback = parseFeedback(sub.feedback);
@@ -126,16 +128,16 @@ export default function Screen5({ selTrack, githubUrl, walletAddress, challengeI
       await sleep(200);
 
       onDone({
-        score:          onChainScore    ?? apiResult?.score,
-        strengths:      onChainFeedback?.strengths    ?? apiResult?.strengths,
-        improvements:   onChainFeedback?.improvements ?? apiResult?.improvements,
-        summary:        onChainFeedback?.category_breakdown ?? apiResult?.summary,
-        breakdown:      apiResult?.breakdown,
-        txHash:         evaluateTx ?? submitTx ?? null,
+        score:           onChainScore    ?? apiResult?.score,
+        strengths:       onChainFeedback?.strengths    ?? apiResult?.strengths,
+        improvements:    onChainFeedback?.improvements ?? apiResult?.improvements,
+        summary:         onChainFeedback?.category_breakdown ?? apiResult?.summary,
+        breakdown:       apiResult?.breakdown,
+        txHash:          evaluateTx ?? submitTx ?? null,
         validatorScores: scores,
         consensusScore:  avg,
         challengeId,
-        isOnChain:      !!evaluateTx,
+        isOnChain:       !!evaluateTx,
       });
     };
     run();

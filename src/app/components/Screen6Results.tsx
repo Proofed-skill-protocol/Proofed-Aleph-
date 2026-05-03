@@ -1,21 +1,24 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useAccount } from 'wagmi';
 import { PATHS, TrackKey } from '@/lib/data';
 import { getGrade, randomHex, copyToClipboard } from '@/lib/utils';
 
 interface Screen6Props {
-  selTrack:      TrackKey;
-  walletAddress: string;
-  poolEntry:     number | null;
-  evalResult:    any | null;
-  onRestart:     () => void;
-  onToast:       (msg: string) => void;
+  selTrack:   TrackKey;
+  poolEntry:  number | null;
+  evalResult: any | null;
+  onRestart:  () => void;
+  onToast:    (msg: string) => void;
 }
 
 export default function Screen6({
-  selTrack, walletAddress, poolEntry, evalResult, onRestart, onToast,
+  selTrack, poolEntry, evalResult, onRestart, onToast,
 }: Screen6Props) {
+  const account = useAccount();
+  const address = account.address;
+
   const ev = PATHS[selTrack].eval;
 
   const score        = evalResult?.consensusScore ?? evalResult?.score ?? ev.score;
@@ -29,7 +32,7 @@ export default function Screen6({
   const displayTxHash = realTxHash ?? ('0x' + randomHex(64));
   const verifyId      = displayTxHash.slice(2, 10);
   const verifyUrl     = `https://verify.proofed.xyz/${verifyId}`;
-  const short         = walletAddress ? walletAddress.slice(0, 6) + '...' + walletAddress.slice(-4) : '0x????...????';
+  const short         = address ? address.slice(0, 6) + '...' + address.slice(-4) : '0x????...????';
   const pool          = poolEntry === 0 ? 100 : poolEntry === 2 ? 200 : 500;
   const grade         = getGrade(score);
 

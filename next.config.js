@@ -1,16 +1,6 @@
-/** @type {import('next').NextConfig} */
 const nextConfig = {
   webpack: (config) => {
-    config.resolve.fallback = {
-      ...config.resolve.fallback,
-      'pino-pretty': false,
-      'accounts': false,
-      '@metamask/connect-evm': false,
-    };
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      'porto/internal': false,
-    };
+    config.resolve.alias['porto/internal'] = false;
     return config;
   },
 };

@@ -6,6 +6,7 @@ const nextConfig = {
       'pino-pretty': false,
       'accounts': false,
       '@metamask/connect-evm': false,
+      'porto/internal': false,
     };
     return config;
   },

@@ -1,4 +1,14 @@
 /** @type {import('next').NextConfig} */
-const nextConfig = {};
+const nextConfig = {
+  // your existing config...
+  turbopack: {
+    resolveAlias: {
+      "porto": "./src/lib/empty-module.js",
+      // add these too if you get similar errors later:
+      "@coinbase/wallet-sdk": "./src/lib/empty-module.js",
+      "@gemini-wallet/core": "./src/lib/empty-module.js",
+    },
+  },
+};
 
-module.exports = nextConfig;
+export default nextConfig;

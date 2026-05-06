@@ -1,6 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // your existing config...
   turbopack: {
     resolveAlias: {
       "porto": "./src/lib/empty-module.js",

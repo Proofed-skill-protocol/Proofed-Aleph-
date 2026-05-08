@@ -1,9 +1,5 @@
 'use client';
 
-// ── Drop this component into src/app/components/CompanyPreview.tsx ──
-// Then render it inside the company view in page.tsx, replacing the
-// existing company-features + istrip block.
-
 export default function CompanyPreview() {
   const steps = [
     {

@@ -68,6 +68,11 @@ export default function SubmitPage() {
 
       setPhase('polling');
 
+      if (!address) {
+      setPhase("error:wallet");
+      setErrorMsg("No wallet connected. Please connect your wallet and try again.");
+      return;
+      }
       const verdict = await pollForResult(
         challengeId,
         address,
